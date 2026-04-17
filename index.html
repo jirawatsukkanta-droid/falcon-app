@@ -590,14 +590,16 @@ function showPage(page) {
 function pgDashboard(el) {
   const t=jobs.length, open=jobs.filter(j=>j.status==='open').length,
         inprog=jobs.filter(j=>j.status==='inprogress').length,
-        done=jobs.filter(j=>['site_done','reported','invoiced'].includes(j.status)).length;
+        sitedone=jobs.filter(j=>j.status==='site_done').length,
+        done=jobs.filter(j=>['reported','invoiced'].includes(j.status)).length;
   const recent=[...jobs].sort((a,b)=>b.createdAt-a.createdAt).slice(0,6);
   el.innerHTML=`
     <div class="pg-head"><div class="pg-title">Dashboard</div><div class="pg-sub">ภาพรวมงานทั้งหมดของ Falcon</div></div>
-    <div class="stats">
+    <div class="stats" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat" style="--sc:#7c6fff"><div class="stat-val">${t}</div><div class="stat-lbl">Job ทั้งหมด</div></div>
       <div class="stat" style="--sc:#b57bff"><div class="stat-val">${open}</div><div class="stat-lbl">รอจ่ายงาน</div></div>
       <div class="stat" style="--sc:#f5a623"><div class="stat-val">${inprog}</div><div class="stat-lbl">กำลังดำเนินการ</div></div>
+      <div class="stat" style="--sc:#38b6ff"><div class="stat-val">${sitedone}</div><div class="stat-lbl">จบหน้างาน</div></div>
       <div class="stat" style="--sc:#3de87a"><div class="stat-val">${done}</div><div class="stat-lbl">เสร็จสิ้น</div></div>
     </div>
     <div class="sec-head"><div class="sec-title">Job ล่าสุด</div><button class="btn btn-o btn-sm" onclick="showPage('jobs')">ดูทั้งหมด →</button></div>
@@ -640,7 +642,13 @@ function jCard(j) {
     </div>
     <div class="jmeta">
       ${j.workPlace?`<span class="meta">📍 ${j.workPlace}</span>`:''}
-      ${j.workingDate?`<span class="meta">📅 ${j.workingDate}</span>`:''}
+      ${j.workingDate?`<span class="meta">📅 ${(()=>{
+        const dates = j.workingDate.split(', ').map(d=>{
+          const clean = d.trim().replace('T00:00:00.000Z','').replace(/T\d{2}:\d{2}:\d{2}.*$/,'');
+          try { return new Date(clean).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}); } catch(e) { return clean; }
+        });
+        return dates.length > 3 ? dates.slice(0,2).join(', ') + ' ... +' + (dates.length-2) + ' วัน' : dates.join(', ');
+      })()}</span>`:''}
       ${methods.map(m=>`<span class="mchip">${m}</span>`).join('')}
     </div>
     <div class="jfoot"><div class="avatars">${avs}</div><span style="font-size:11px;color:var(--text3)">${fmt(j.createdAt)}</span></div>
