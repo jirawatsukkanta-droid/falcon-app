@@ -627,9 +627,11 @@ function searchJ(q){const lq=q.toLowerCase();document.querySelectorAll('#jListEl
 
 function jCard(j) {
   const ms=(j.members||[]),methods=(j.methods||[]);
-  const avs=`<div class="av av-lead" title="${j.leadName||'-'}">${(j.leadName||'?')[0]}</div>`
-    +ms.slice(0,3).map(m=>`<div class="av av-m" title="${m}">${m[0]}</div>`).join('')
-    +(ms.length>3?`<div class="av av-more">+${ms.length-3}</div>`:'');
+  const avs=`<div style="display:flex;align-items:center;gap:8px">
+    <div class="av av-lead" title="${j.leadName||'-'}">${(j.leadName||'?')[0]}</div>
+    ${j.leadName?`<span style="font-size:12px;font-weight:600;color:#b57bff">${j.leadName}</span>`:'<span style="font-size:12px;color:var(--text3)">ยังไม่ระบุหัวหน้าทีม</span>'}
+    ${ms.length?`<span style="font-size:11px;color:var(--text3);margin-left:4px">+ ${ms.length} คน</span>`:''}
+  </div>`;
   return `<div class="jcard" onclick="openDetail('${j.id}')">
     <div class="jcard-top">
       <div class="jno">${j.jobNo}</div>
