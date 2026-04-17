@@ -694,7 +694,8 @@ function pgAssign(el, editJobId=null) {
             : `<select class="fi" id="aJobId" onchange="fillClientFromJob(this.value)">
             <option value="">— เลือก Job No. —</option>
             ${openJobs.map(j=>`<option value="${j.id}">${j.jobNo}</option>`).join('')}
-          </select>`}
+          </select>
+          <script>setTimeout(()=>{const s=document.getElementById('aJobId');if(s&&s.value)fillClientFromJob(s.value);},100);<\/script>`}
         </div>
         <div class="fg"><label>CLIENT</label><input class="fi" id="aClient" placeholder="ชื่อลูกค้า (ดึงอัตโนมัติจาก Job)" readonly style="background:var(--surface3);color:var(--text2)" /></div>
         <div class="fg"><label>PROJECT NAME</label><input class="fi" id="aProject" placeholder="ชื่อโปรเจกต์ (ถ้ามี)" ${editJob?`value="${editJob.projectName||''}"`:''}  /></div>
