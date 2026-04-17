@@ -774,13 +774,15 @@ function removeCustomMethod(m){_customMethods=_customMethods.filter(x=>x!==m);ad
 function addMember(n){if(!n)return;if(!_members.includes(n)){_members.push(n);renderMtags();}document.getElementById('aMemberSel').value='';}
 function removeMember(n){_members=_members.filter(x=>x!==n);renderMtags();}
 function renderMtags(){const el=document.getElementById('mtagArea');if(el)el.innerHTML=_members.map(m=>`<span class="mtag"><span>${m}</span><span class="mtag-x" onclick="removeMember('${m}')">×</span></span>`).join('');}
-function fillClientFromJob(jobId) {
-  const job = jobs.find(j=>j.id===jobId);
-  if (job && job.client) {
-    document.getElementById('aClient').value = job.client;
-  } else {
-    document.getElementById('aClient').value = '';
+async function fillClientFromJob(jobId) {
+  if (!jobId) return;
+  let job = jobs.find(j=>j.id===jobId);
+  if (!job) {
+    await loadJobs();
+    job = jobs.find(j=>j.id===jobId);
   }
+  const clientEl = document.getElementById('aClient');
+  if (clientEl) clientEl.value = job?.client || '';
 }
 
 let _workDates = [];
@@ -835,7 +837,13 @@ async function doAssign(){
   const selected=[...document.querySelectorAll('#methodSel .mopt.on')].map(e=>e.dataset.v);
   const methods=[...selected,..._customMethods];
   if(!jobId||!place||!lead||!methods.length||!_workDates.length){toast('กรุณากรอกข้อมูลให้ครบ (Work Place, Working Date, Work Method, หัวหน้าทีม)','i');return;}
-  const job=jobs.find(j=>j.id===jobId);if(!job)return;
+  let job=jobs.find(j=>j.id===jobId);
+  if(!job){
+    // reload jobs and try again
+    await loadJobs();
+    job=jobs.find(j=>j.id===jobId);
+    if(!job){ toast('ไม่พบ Job นี้ในระบบ','e'); return; }
+  }
   const isEdit = job.status==='inprogress';
   Object.assign(job,{client:client||job.client,projectName:document.getElementById('aProject').value,workPlace:place,
     workingDate:_workDates.join(', '),methods,leadName:lead,members:[..._members],status:'inprogress',
