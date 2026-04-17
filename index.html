@@ -684,7 +684,7 @@ async function pgAssign(el, editJobId=null) {
   if (ures.ok && ures.users) users = ures.users;
   await loadJobs();
   const openJobs=jobs.filter(j=>j.status==='open');
-  const editJob = editJobId ? jobs.find(j=>j.id===editJobId) : null;
+  const editJob = editJobId ? jobs.find(j=>String(j.id)===String(editJobId)) : null;
   _members = editJob ? [...(editJob.members||[])] : [];
   _workDates = editJob && editJob.workingDate ? editJob.workingDate.split(', ').filter(Boolean) : [];
   _customMethods = editJob ? (editJob.methods||[]).filter(m=>!METHODS.includes(m)) : [];
@@ -776,10 +776,10 @@ function removeMember(n){_members=_members.filter(x=>x!==n);renderMtags();}
 function renderMtags(){const el=document.getElementById('mtagArea');if(el)el.innerHTML=_members.map(m=>`<span class="mtag"><span>${m}</span><span class="mtag-x" onclick="removeMember('${m}')">×</span></span>`).join('');}
 async function fillClientFromJob(jobId) {
   if (!jobId) return;
-  let job = jobs.find(j=>j.id===jobId);
+  let job = jobs.find(j=>String(j.id)===String(jobId));
   if (!job) {
     await loadJobs();
-    job = jobs.find(j=>j.id===jobId);
+    job = jobs.find(j=>String(j.id)===String(jobId));
   }
   const clientEl = document.getElementById('aClient');
   if (clientEl) clientEl.value = job?.client || '';
@@ -837,11 +837,11 @@ async function doAssign(){
   const selected=[...document.querySelectorAll('#methodSel .mopt.on')].map(e=>e.dataset.v);
   const methods=[...selected,..._customMethods];
   if(!jobId||!place||!lead||!methods.length||!_workDates.length){toast('กรุณากรอกข้อมูลให้ครบ (Work Place, Working Date, Work Method, หัวหน้าทีม)','i');return;}
-  let job=jobs.find(j=>j.id===jobId);
+  let job=jobs.find(j=>String(j.id)===String(jobId));
   if(!job){
     // reload jobs and try again
     await loadJobs();
-    job=jobs.find(j=>j.id===jobId);
+    job=jobs.find(j=>String(j.id)===String(jobId));
     if(!job){ toast('ไม่พบ Job นี้ในระบบ','e'); return; }
   }
   const isEdit = job.status==='inprogress';
@@ -1053,7 +1053,7 @@ document.getElementById('detailMo').addEventListener('click',e=>{if(e.target===e
 document.getElementById('userMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMo('userMo')});
 
 async function updSt(id, status, tsField) {
-  const job=jobs.find(j=>j.id===id);if(!job)return;
+  const job=jobs.find(j=>String(j.id)===String(id));if(!job)return;
   job.status=status; job[tsField]=Date.now(); job.updatedBy=session?.user?.username;
   await saveJob(job,'saveJob');
 
