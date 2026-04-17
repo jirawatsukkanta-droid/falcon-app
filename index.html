@@ -460,15 +460,20 @@ async function doLogin() {
 
   const hash = await sha256(p);
 
-  // try API first
-  const res = await apiCall('login', { username:u, passwordHash:hash });
+  // try API first - send raw strings directly, not JSON.stringify'd
   let user = null;
-  if (res.ok && res.user) {
-    user = res.user;
-    // sync users from sheet
-    if (res.users) users = res.users;
-  } else {
-    // fallback local
+  try {
+    const loginUrl = CFG.scriptUrl + '?action=login&username=' + encodeURIComponent(u) + '&passwordHash=' + encodeURIComponent(hash);
+    const loginRes = await fetch(loginUrl);
+    const loginJson = await loginRes.json();
+    if (loginJson.ok && loginJson.user) {
+      user = loginJson.user;
+      if (loginJson.users) users = loginJson.users;
+    }
+  } catch(e) {}
+  const res = { ok: !!user };
+  // fallback local if API failed
+  if (!user) {
     user = users.find(x => x.username===u && x.passwordHash===hash);
   }
 
