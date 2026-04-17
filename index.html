@@ -283,14 +283,7 @@ select.fi option{background:var(--surface2)}
     <div class="fl"><label>USERNAME</label><input class="fi" id="loginUser" placeholder="username" autocomplete="username" /></div>
     <div class="fl"><label>PASSWORD</label><input class="fi" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
     <button class="btn-login" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div class="demo-hint">
-      <div class="demo-hint-title">DEMO ACCOUNTS</div>
-      <div class="demo-row">
-        <div class="demo-chip" onclick="fillDemo('admin','admin123')">admin / admin123</div>
-        <div class="demo-chip" onclick="fillDemo('pe01','pe123')">pe01 / pe123</div>
-        <div class="demo-chip" onclick="fillDemo('lead01','lead123')">lead01 / lead123</div>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -363,7 +356,7 @@ const CFG = {
   logsSheet: 'Logs',
 };
 
-const METHODS = ['UT','RT','MT','PT','VT','ET','PMI','Drone'];
+const METHODS = ['UT','MT','PT','VT','ET','PMI','PAUT','UTM','Holiday Test','Tube Inspection','Tank Inspection','Vessel Inspection'];
 const ROLES = { admin:'Admin', pe:'Project Engineer', lead:'Team Leader' };
 
 // ── Demo users (used when no script URL) ──
