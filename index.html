@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Falcon Work Assignment</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#08080e; --surface:#111118; --surface2:#18181f; --surface3:#20202a;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11); --border3:rgba(255,255,255,0.18);
+  --accent:#7c6fff; --accent-glow:rgba(124,111,255,0.35);
+  --green:#3de87a; --green-bg:rgba(61,232,122,0.12); --green-border:rgba(61,232,122,0.25);
+  --amber:#f5a623; --amber-bg:rgba(245,166,35,0.12); --amber-border:rgba(245,166,35,0.25);
+  --red:#ff5c6c; --red-bg:rgba(255,92,108,0.12); --red-border:rgba(255,92,108,0.25);
+  --blue:#38b6ff; --blue-bg:rgba(56,182,255,0.12); --blue-border:rgba(56,182,255,0.25);
+  --purple:#b57bff; --purple-bg:rgba(181,123,255,0.12); --purple-border:rgba(181,123,255,0.25);
+  --text:#eeeef5; --text2:rgba(238,238,245,0.52); --text3:rgba(238,238,245,0.28);
+  --r:14px; --r-sm:9px; --r-xs:6px;
+  --font:'DM Sans',sans-serif; --font-d:'Syne',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;max-width:100vw}
+
+/* noise overlay removed */
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,111,255,0.12) 0%, transparent 70%), var(--bg)}
+.login-box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:36px 32px}
+.login-logo{font-family:var(--font-d);font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px;
+  background:linear-gradient(135deg,#7c6fff,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
+.login-err{font-size:13px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);
+  border-radius:var(--r-xs);padding:10px 14px;margin-bottom:14px;display:none}
+.fl{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.fl label{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.3px}
+.fi{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);
+  padding:11px 14px;font-size:14px;font-family:var(--font);outline:none;width:100%;transition:border-color .15s}
+.fi:focus{border-color:var(--accent)}
+.fi::placeholder{color:var(--text3)}
+.btn-login{width:100%;padding:12px;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:600;font-family:var(--font);
+  background:var(--accent);color:#fff;cursor:pointer;transition:all .15s;margin-top:4px}
+.btn-login:hover{background:#9186ff;transform:translateY(-1px)}
+.btn-login:active{transform:translateY(0)}
+.demo-hint{margin-top:18px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm)}
+.demo-hint-title{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px}
+.demo-row{display:flex;gap:8px;flex-wrap:wrap}
+.demo-chip{font-size:11px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);
+  border-radius:99px;padding:3px 10px;cursor:pointer;transition:all .12s}
+.demo-chip:hover{border-color:var(--border3);color:var(--text)}
+
+/* ── SHELL ── */
+#appShell{display:none;flex-direction:column;min-height:100dvh;position:relative;z-index:1;overflow:hidden;max-width:100vw}
+.topbar{height:56px;background:rgba(8,8,14,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 18px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.tbar-logo{font-family:var(--font-d);font-size:17px;font-weight:800;letter-spacing:-.5px;
+  background:linear-gradient(135deg,#7c6fff,#ff6b9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tbar-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.tbar-user{display:flex;align-items:center;gap:8px;margin-left:auto}
+.tbar-name{font-size:13px;color:var(--text2)}
+.tbar-role-badge{font-size:11px;font-weight:700;letter-spacing:.4px;border-radius:99px;padding:3px 9px}
+.role-admin{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.role-pe{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.role-lead{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.btn-logout{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:var(--r-xs);
+  padding:5px 11px;font-size:12px;font-family:var(--font);cursor:pointer;transition:all .12s}
+.btn-logout:hover{border-color:var(--red-border);color:var(--red)}
+
+/* ── BODY LAYOUT ── */
+.body-wrap{display:flex;flex:1;min-height:0;overflow:hidden;max-width:100vw}
+.sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+  padding:18px 10px;overflow-y:auto;position:sticky;top:56px;height:calc(100dvh - 56px)}
+.nav-sect{margin-bottom:20px}
+.nav-sect-label{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--text3);
+  font-weight:700;padding:0 10px;margin-bottom:4px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .13s;border:1px solid transparent}
+.ni:hover{background:var(--surface2);color:var(--text)}
+.ni.on{background:var(--surface3);color:var(--text);border-color:var(--border2)}
+.ni-ic{font-size:15px;width:18px;text-align:center}
+.ni-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;
+  border-radius:99px;padding:1px 7px;min-width:20px;text-align:center}
+
+.main{flex:1;padding:26px 22px;overflow-y:auto;overflow-x:hidden;min-width:0}
+@media(max-width:768px){.sidebar{display:none}.main{padding:14px}}
+@media(max-width:768px) and (pointer:coarse){.main{padding-bottom:80px}}
+
+/* ── PAGE COMMON ── */
+.pg-head{margin-bottom:22px}
+.pg-title{font-family:var(--font-d);font-size:24px;font-weight:700;letter-spacing:-.5px}
+.pg-sub{font-size:13px;color:var(--text2);margin-top:3px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-family:var(--font-d);font-size:15px;font-weight:600}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;
+  position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--sc,#7c6fff),transparent 60%);opacity:.07}
+.stat-val{font-family:var(--font-d);font-size:30px;font-weight:700}
+.stat-lbl{font-size:12px;color:var(--text2);font-weight:500;margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 17px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;border:none;transition:all .13s;outline:none}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#9186ff;transform:translateY(-1px)}
+.btn-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}.btn-g:hover{background:rgba(61,232,122,0.2)}
+.btn-r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}.btn-r:hover{background:rgba(255,92,108,0.2)}
+.btn-o{background:transparent;color:var(--text2);border:1px solid var(--border2)}.btn-o:hover{background:var(--surface2);color:var(--text)}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ── FILTER / SEARCH ── */
+.search-wrap{position:relative;margin-bottom:14px}
+.search-wrap input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:10px 14px 10px 36px;font-size:13px;color:var(--text);font-family:var(--font);outline:none}
+.search-wrap input:focus{border-color:var(--border2)}
+.search-wrap::before{content:'⌕';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.chip{padding:5px 13px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;
+  border:1px solid var(--border);color:var(--text2);background:var(--surface);transition:all .12s;letter-spacing:.2px}
+.chip.on{background:var(--purple-bg);border-color:var(--purple-border);color:var(--purple)}
+.chip:hover:not(.on){border-color:var(--border2);color:var(--text)}
+
+/* ── JOB CARD ── */
+.jlist{display:flex;flex-direction:column;gap:10px}
+.jcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.jcard:hover{border-color:var(--border2);background:var(--surface2);transform:translateY(-1px)}
+.jcard-top{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.jno{font-family:var(--font-d);font-size:12px;font-weight:700;background:var(--surface3);
+  border:1px solid var(--border2);border-radius:var(--r-xs);padding:4px 10px;white-space:nowrap;
+  color:#a09aff;letter-spacing:.5px;flex-shrink:0}
+.jinfo{flex:1;min-width:0}
+.jclient{font-size:15px;font-weight:600}
+.jproj{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.meta{display:flex;align-items:center;gap:4px;background:var(--surface3);border:1px solid var(--border);
+  border-radius:99px;padding:3px 9px;font-size:11px;color:var(--text2)}
+.mchip{background:var(--purple-bg);border:1px solid var(--purple-border);color:#b57bff;
+  border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.5px}
+.jfoot{display:flex;align-items:center;justify-content:space-between;margin-top:13px;
+  padding-top:13px;border-top:1px solid var(--border)}
+.avatars{display:flex;align-items:center}
+.av{width:27px;height:27px;border-radius:50%;border:2px solid var(--surface);display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:700;margin-left:-5px;flex-shrink:0}
+.av:first-child{margin-left:0}
+.av-lead{background:linear-gradient(135deg,#7c6fff,#b57bff)}
+.av-m{background:var(--surface3);color:var(--text2)}
+.av-more{background:var(--surface3);color:var(--text3);font-size:9px}
+
+/* ── STATUS BADGE ── */
+.st{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.st-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.st-open{background:var(--purple-bg);color:#b57bff}.st-open .st-dot{background:#b57bff;box-shadow:0 0 6px #b57bff}
+.st-inprogress{background:var(--amber-bg);color:var(--amber)}.st-inprogress .st-dot{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:pulse 1.6s infinite}
+.st-site_done{background:var(--green-bg);color:var(--green)}.st-site_done .st-dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.st-reported{background:var(--blue-bg);color:var(--blue)}.st-reported .st-dot{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+.st-invoiced{background:var(--surface3);color:var(--text2)}.st-invoiced .st-dot{background:var(--text2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── MODAL ── */
+.mo-wrap{position:fixed;inset:0;z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0;
+  background:rgba(0,0,0,0);pointer-events:none;transition:background .2s}
+@media(min-width:600px){.mo-wrap{align-items:center;padding:20px}}
+.mo-wrap.open{display:flex;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);pointer-events:all}
+.mo{background:var(--surface);border:1px solid var(--border2);width:100%;max-width:580px;
+  max-height:92dvh;overflow-y:auto;padding:24px 22px;
+  border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1)}
+@media(min-width:600px){.mo{border-radius:20px;transform:translateY(20px) scale(.97)}}
+.mo-wrap.open .mo{transform:translateY(0) scale(1)}
+.mo-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px}
+.mo-title{font-family:var(--font-d);font-size:19px;font-weight:700}
+.mo-x{width:30px;height:30px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:17px;flex-shrink:0}
+.mo-x:hover{color:var(--text)}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.fg label{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.4px}
+.fi{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);
+  padding:10px 13px;font-size:13px;font-family:var(--font);outline:none;width:100%;transition:border-color .15s}
+.fi:focus{border-color:var(--accent)}
+.fi::placeholder{color:var(--text3)}
+.fi[disabled]{opacity:.4;cursor:not-allowed}
+select.fi option{background:var(--surface2)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.fgrid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+.ffoot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ── MULTI METHOD ── */
+.msel{display:flex;flex-wrap:wrap;gap:5px;padding:9px;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:var(--r-sm);min-height:44px}
+.mopt{display:flex;align-items:center;gap:3px;background:var(--surface3);border:1px solid var(--border);
+  border-radius:5px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);
+  transition:all .12s;letter-spacing:.3px}
+.mopt.on{background:var(--purple-bg);border-color:var(--purple-border);color:#b57bff}
+.mopt:hover:not(.on){border-color:var(--border2);color:var(--text)}
+.custom-method{display:flex;gap:6px;margin-top:6px}
+
+/* ── TIMELINE ── */
+.tl{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:14px}
+.tl-dc{display:flex;flex-direction:column;align-items:center}
+.tl-dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--border2);background:var(--surface3);flex-shrink:0;transition:all .2s}
+.tl-dot.done{background:var(--green);border-color:var(--green);box-shadow:0 0 10px rgba(61,232,122,.4)}
+.tl-dot.active{background:var(--amber);border-color:var(--amber);box-shadow:0 0 10px rgba(245,166,35,.4);animation:pulse 1.5s infinite}
+.tl-line{width:1px;flex:1;min-height:18px;background:var(--border);margin:3px 0}
+.tl-c{flex:1;padding-bottom:18px}
+.tl-step{font-size:14px;font-weight:600;color:var(--text)}
+.tl-step.done{color:var(--green)}
+.tl-ts{font-size:11px;color:var(--text2);margin-top:2px}
+.tl-act{margin-top:8px}
+
+/* ── DETAIL ROW ── */
+.dr{display:flex;gap:10px;margin-bottom:9px;align-items:flex-start}
+.dk{font-size:12px;color:var(--text2);width:120px;flex-shrink:0;padding-top:1px}
+.dv{font-size:13px;font-weight:500;flex:1;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+
+/* ── MEMBER TAGS ── */
+.mtag{display:inline-flex;align-items:center;gap:4px;background:var(--surface3);border:1px solid var(--border2);
+  border-radius:99px;padding:3px 10px 3px 8px;font-size:12px}
+.mtag-x{color:var(--text3);cursor:pointer;font-size:13px;line-height:1}.mtag-x:hover{color:var(--red)}
+.mtags-area{display:flex;flex-wrap:wrap;gap:4px;min-height:30px;align-items:center;margin-top:4px}
+
+/* ── ADMIN TABLE ── */
+.adm-table{width:100%;border-collapse:collapse;font-size:13px}
+.adm-table th{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border2);
+  font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px}
+.adm-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.adm-table tr:last-child td{border-bottom:none}
+.adm-table tr:hover td{background:var(--surface2)}
+
+/* ── MOBILE NAV ── */
+.mob-nav{display:none !important;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(17,17,24,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);
+  padding:6px 0 env(safe-area-inset-bottom,6px)}
+.mob-nav.visible{display:flex !important;}
+.mni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px;cursor:pointer}
+.mni-ic{font-size:19px}
+.mni-lbl{font-size:10px;color:var(--text2);font-weight:600}
+.mni.on .mni-lbl{color:var(--accent)}
+
+/* ── TOAST ── */
+#toast-wrap{position:fixed;top:64px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none;width:0;height:0;overflow:visible}
+.toast{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);
+  padding:11px 15px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;
+  width:280px;animation:tin .22s ease,tout .3s ease 2.7s forwards;pointer-events:none}
+.toast-s{border-left:3px solid var(--green)}.toast-e{border-left:3px solid var(--red)}.toast-i{border-left:3px solid var(--accent)}
+@keyframes tin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes tout{to{transform:translateX(110%);opacity:0}}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:50px 20px;color:var(--text2)}
+.empty-ic{font-size:40px;opacity:.3;margin-bottom:10px}
+
+/* ── ALERT ── */
+.alert{padding:11px 14px;border-radius:var(--r-sm);font-size:13px;margin-bottom:14px}
+.alert-r{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.alert-g{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+
+/* spinner */
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── CONFIG BANNER ── */
+#cfg-banner{background:var(--amber-bg);border-bottom:1px solid var(--amber-border);padding:10px 18px;
+  display:flex;align-items:center;gap:10px;font-size:13px;color:var(--amber)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ LOGIN ════════════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">FALCON</div>
+    <div class="login-sub">Work Assignment System</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="fl"><label>USERNAME</label><input class="fi" id="loginUser" placeholder="username" autocomplete="username" /></div>
+    <div class="fl"><label>PASSWORD</label><input class="fi" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" /></div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="demo-hint">
+      <div class="demo-hint-title">DEMO ACCOUNTS</div>
+      <div class="demo-row">
+        <div class="demo-chip" onclick="fillDemo('admin','admin123')">admin / admin123</div>
+        <div class="demo-chip" onclick="fillDemo('pe01','pe123')">pe01 / pe123</div>
+        <div class="demo-chip" onclick="fillDemo('lead01','lead123')">lead01 / lead123</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ APP SHELL ════════════════════ -->
+<div id="appShell">
+  <div id="cfg-banner" style="display:none">
+    ⚠️ ยังไม่ได้ตั้งค่า Apps Script URL — ข้อมูลจะเก็บใน Browser เท่านั้น
+    <button class="btn btn-sm btn-o" style="margin-left:auto" onclick="showPage('settings')">ตั้งค่า</button>
+  </div>
+  <header class="topbar">
+    <div class="tbar-logo">FALCON</div>
+    <div class="tbar-sep"></div>
+    <span style="font-size:12px;color:var(--text3)">Work Assignment</span>
+    <div class="tbar-user">
+      <span class="tbar-name" id="tbarName"></span>
+      <span class="tbar-role-badge" id="tbarRole"></span>
+      <button class="btn-logout" onclick="doLogout()">ออก</button>
+    </div>
+  </header>
+
+  <div class="body-wrap">
+    <aside class="sidebar">
+      <div class="nav-sect">
+        <div class="nav-sect-label">MAIN</div>
+        <div class="ni on" id="ni-dashboard" onclick="showPage('dashboard')"><span class="ni-ic">📊</span>Dashboard</div>
+        <div class="ni" id="ni-jobs" onclick="showPage('jobs')"><span class="ni-ic">📋</span>All Jobs<span class="ni-badge" id="nbOpen">0</span></div>
+      </div>
+      <div class="nav-sect" id="snav-admin">
+        <div class="nav-sect-label">ADMIN</div>
+        <div class="ni" id="ni-openjob" onclick="showPage('openjob')"><span class="ni-ic">＋</span>Open Job</div>
+        <div class="ni" id="ni-users" onclick="showPage('users')"><span class="ni-ic">👥</span>จัดการ Users</div>
+        <div class="ni" id="ni-settings" onclick="showPage('settings')"><span class="ni-ic">⚙️</span>ตั้งค่าระบบ</div>
+      </div>
+      <div class="nav-sect" id="snav-pe">
+        <div class="nav-sect-label">PROJECT ENGINEER</div>
+        <div class="ni" id="ni-assign" onclick="showPage('assign')"><span class="ni-ic">📝</span>จ่ายงาน</div>
+      </div>
+    </aside>
+
+    <main class="main" id="mainContent"></main>
+  </div>
+
+  
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="mo-wrap" id="detailMo"><div class="mo" id="detailMoBody"></div></div>
+<!-- USER MODAL -->
+<div class="mo-wrap" id="userMo"><div class="mo" id="userMoBody"></div></div>
+
+<div id="toast-wrap" style="position:fixed;top:64px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none;width:0;height:0;overflow:visible"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIG — paste your Apps Script URL here
+// ══════════════════════════════════════════
+const CFG = {
+  scriptUrl: localStorage.getItem('falconScriptUrl') || '',
+  sheetName: 'Jobs',
+  usersSheet: 'Users',
+  logsSheet: 'Logs',
+};
+
+const METHODS = ['UT','RT','MT','PT','VT','ET','PMI','Drone'];
+const ROLES = { admin:'Admin', pe:'Project Engineer', lead:'Team Leader' };
+
+// ── Demo users (used when no script URL) ──
+const DEMO_USERS = [
+  { id:'u1', username:'admin',  passwordHash:'', role:'admin', fullName:'Admin ระบบ',      email:'admin@falcon.co.th' },
+  { id:'u2', username:'pe01',   passwordHash:'', role:'pe',    fullName:'วิศวกร สมชาย',    email:'pe01@falcon.co.th' },
+  { id:'u3', username:'lead01', passwordHash:'', role:'lead',  fullName:'หัวหน้า วิชัย',   email:'' },
+];
+// pre-compute hashes for demo (filled on load)
+async function initDemoHashes() {
+  DEMO_USERS[0].passwordHash = await sha256('admin123');
+  DEMO_USERS[1].passwordHash = await sha256('pe123');
+  DEMO_USERS[2].passwordHash = await sha256('lead123');
+}
+
+// ── State ──
+let session = null;  // { user, token }
+let jobs = [];
+let users = [...DEMO_USERS];
+let curPage = 'dashboard';
+let filterSt = 'all';
+let _members = [];
+
+// ── SHA-256 ──
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Format ──
+function fmt(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+}
+function stBadge(s) {
+  const m = { open:['st-open','เปิดรับงาน'], inprogress:['st-inprogress','กำลังดำเนินการ'],
+    site_done:['st-site_done','จบหน้างาน'], reported:['st-reported','ส่งรายงานแล้ว'], invoiced:['st-invoiced','ออกใบแจ้งหนี้'] };
+  const [c,l] = m[s]||['','?'];
+  return `<span class="st ${c}"><span class="st-dot"></span>${l}</span>`;
+}
+function genJobNo() {
+  const y = new Date().getFullYear().toString().slice(-2);
+  const n = (jobs.length+1).toString().padStart(4,'0');
+  return `FLN-${y}${n}`;
+}
+
+// ── Toast ──
+function toast(msg, type='s') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = (type==='s'?'✅':type==='e'?'❌':'ℹ️') + ' ' + msg;
+  document.getElementById('toast-wrap').appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+
+// ══════════════════════════════════════════
+//  API — Google Sheet via Apps Script
+// ══════════════════════════════════════════
+async function apiCall(action, data={}) {
+  if (!CFG.scriptUrl) return { ok:false, local:true };
+  try {
+    const isRead = ['login','getJobs','getUsers'].includes(action);
+    let res;
+    if (isRead) {
+      const qs = new URLSearchParams({ action, ...Object.fromEntries(Object.entries(data).map(([k,v])=>[k,JSON.stringify(v)])) });
+      res = await fetch(CFG.scriptUrl + '?' + qs.toString());
+    } else {
+      res = await fetch(CFG.scriptUrl, { method:'POST', body: JSON.stringify({ action, ...data }) });
+    }
+    const json = await res.json();
+    return json;
+  } catch(e) {
+    return { ok:false, error: e.message };
+  }
+}
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function fillDemo(u,p) {
+  document.getElementById('loginUser').value = u;
+  document.getElementById('loginPass').value = p;
+}
+
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  if (!u || !p) { err.textContent='กรุณากรอก username และ password'; err.style.display='block'; return; }
+  btn.innerHTML = '<span class="spin"></span>';
+  btn.disabled = true;
+  err.style.display = 'none';
+
+  const hash = await sha256(p);
+
+  // try API first
+  const res = await apiCall('login', { username:u, passwordHash:hash });
+  let user = null;
+  if (res.ok && res.user) {
+    user = res.user;
+    // sync users from sheet
+    if (res.users) users = res.users;
+  } else {
+    // fallback local
+    user = users.find(x => x.username===u && x.passwordHash===hash);
+  }
+
+  btn.innerHTML = 'เข้าสู่ระบบ'; btn.disabled = false;
+  if (!user) { err.textContent='Username หรือ Password ไม่ถูกต้อง'; err.style.display='block'; return; }
+
+  const token = await sha256(u + Date.now());
+  session = { user, token, loginAt: Date.now() };
+  localStorage.setItem('falconSession', JSON.stringify(session));
+  startApp();
+}
+
+function doLogout() {
+  session = null;
+  localStorage.removeItem('falconSession');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+}
+
+function restoreSession() {
+  const raw = localStorage.getItem('falconSession');
+  if (!raw) return false;
+  try {
+    const s = JSON.parse(raw);
+    // 8 hour session
+    if (Date.now() - s.loginAt > 8*3600*1000) { localStorage.removeItem('falconSession'); return false; }
+    session = s;
+    return true;
+  } catch { return false; }
+}
+
+// ══════════════════════════════════════════
+//  APP START
+// ══════════════════════════════════════════
+function startApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'flex';
+
+  const u = session.user;
+  document.getElementById('tbarName').textContent = u.fullName || u.username;
+  document.getElementById('tbarRole').textContent = ROLES[u.role] || u.role;
+  document.getElementById('tbarRole').className = 'tbar-role-badge role-' + u.role;
+
+  // show/hide nav sections
+  const isAdmin = u.role === 'admin';
+  const isPE = u.role === 'pe';
+  document.getElementById('snav-admin').style.display = isAdmin ? '' : 'none';
+  document.getElementById('snav-pe').style.display = isPE ? '' : 'none';
+
+  // mobile action
+  const mniLbl = document.getElementById('mni-action-lbl');
+  const extraLbl = document.getElementById('mni-extra-lbl');
+  if (isAdmin) { mniLbl.textContent='เปิด Job'; extraLbl.textContent='Users'; }
+  else if (isPE) { mniLbl.textContent='จ่ายงาน'; extraLbl.textContent=''; }
+  else { mniLbl.textContent=''; extraLbl.textContent=''; }
+
+  if (!CFG.scriptUrl) document.getElementById('cfg-banner').style.display='flex';
+  else document.getElementById('cfg-banner').style.display='none';
+
+  loadJobs().then(()=>showPage('dashboard'));
+}
+
+function mobAction() {
+  const r = session?.user?.role;
+  if (r==='admin') showPage('openjob');
+  else if (r==='pe') showPage('assign');
+}
+function mobExtra() {
+  const r = session?.user?.role;
+  if (r==='admin') showPage('users');
+}
+
+// ══════════════════════════════════════════
+//  JOBS DATA
+// ══════════════════════════════════════════
+async function loadJobs() {
+  const res = await apiCall('getJobs');
+  if (res.ok && res.jobs) jobs = res.jobs;
+  else jobs = JSON.parse(localStorage.getItem('falconJobs')||'[]');
+  document.getElementById('nbOpen').textContent = jobs.filter(j=>j.status==='open').length;
+}
+
+function saveJobsLocal() {
+  localStorage.setItem('falconJobs', JSON.stringify(jobs));
+  document.getElementById('nbOpen').textContent = jobs.filter(j=>j.status==='open').length;
+}
+
+async function saveJob(job, action='saveJob') {
+  const res = await apiCall(action, { job });
+  if (!res.ok || res.local) saveJobsLocal();
+  else saveJobsLocal();
+}
+
+// ══════════════════════════════════════════
+//  PAGES
+// ══════════════════════════════════════════
+function showPage(page) {
+  curPage = page;
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.querySelectorAll('.mni').forEach(n=>n.classList.remove('on'));
+  const ni = document.getElementById('ni-'+page);
+  if (ni) ni.classList.add('on');
+  const mni = document.getElementById('mni-'+page);
+  if (mni) mni.classList.add('on');
+  if (['dashboard','jobs'].includes(page)) {
+    document.getElementById('mni-'+page)?.classList.add('on');
+  }
+  const m = document.getElementById('mainContent');
+  const pg = { dashboard:pgDashboard, jobs:pgJobs, openjob:pgOpenJob, assign:pgAssign, users:pgUsers, settings:pgSettings };
+  (pg[page]||pgDashboard)(m);
+}
+
+// ── DASHBOARD ──
+function pgDashboard(el) {
+  const t=jobs.length, open=jobs.filter(j=>j.status==='open').length,
+        inprog=jobs.filter(j=>j.status==='inprogress').length,
+        done=jobs.filter(j=>['site_done','reported','invoiced'].includes(j.status)).length;
+  const recent=[...jobs].sort((a,b)=>b.createdAt-a.createdAt).slice(0,6);
+  el.innerHTML=`
+    <div class="pg-head"><div class="pg-title">Dashboard</div><div class="pg-sub">ภาพรวมงานทั้งหมดของ Falcon</div></div>
+    <div class="stats">
+      <div class="stat" style="--sc:#7c6fff"><div class="stat-val">${t}</div><div class="stat-lbl">Job ทั้งหมด</div></div>
+      <div class="stat" style="--sc:#b57bff"><div class="stat-val">${open}</div><div class="stat-lbl">รอจ่ายงาน</div></div>
+      <div class="stat" style="--sc:#f5a623"><div class="stat-val">${inprog}</div><div class="stat-lbl">กำลังดำเนินการ</div></div>
+      <div class="stat" style="--sc:#3de87a"><div class="stat-val">${done}</div><div class="stat-lbl">เสร็จสิ้น</div></div>
+    </div>
+    <div class="sec-head"><div class="sec-title">Job ล่าสุด</div><button class="btn btn-o btn-sm" onclick="showPage('jobs')">ดูทั้งหมด →</button></div>
+    <div class="jlist">${recent.length?recent.map(jCard).join(''):'<div class="empty"><div class="empty-ic">📭</div>ยังไม่มี Job</div>'}</div>`;
+}
+
+// ── JOB LIST ──
+function pgJobs(el) {
+  let list = jobs;
+  if (filterSt!=='all') list=jobs.filter(j=>j.status===filterSt);
+  const cnt=s=>jobs.filter(j=>j.status===s).length;
+  el.innerHTML=`
+    <div class="pg-head"><div class="pg-title">All Jobs</div><div class="pg-sub">รายการงานทั้งหมด ${jobs.length} Job</div></div>
+    <div class="search-wrap"><input placeholder="ค้นหา Client, Project, Job No..." oninput="searchJ(this.value)"></div>
+    <div class="chips">
+      <div class="chip ${filterSt==='all'?'on':''}" onclick="setFilt('all')">ทั้งหมด (${jobs.length})</div>
+      <div class="chip ${filterSt==='open'?'on':''}" onclick="setFilt('open')">รอจ่ายงาน (${cnt('open')})</div>
+      <div class="chip ${filterSt==='inprogress'?'on':''}" onclick="setFilt('inprogress')">ดำเนินการ (${cnt('inprogress')})</div>
+      <div class="chip ${filterSt==='site_done'?'on':''}" onclick="setFilt('site_done')">จบหน้างาน (${cnt('site_done')})</div>
+      <div class="chip ${filterSt==='reported'?'on':''}" onclick="setFilt('reported')">ส่งรายงาน (${cnt('reported')})</div>
+      <div class="chip ${filterSt==='invoiced'?'on':''}" onclick="setFilt('invoiced')">ออกใบแจ้งหนี้ (${cnt('invoiced')})</div>
+    </div>
+    <div class="jlist" id="jListEl">${list.length?[...list].sort((a,b)=>b.createdAt-a.createdAt).map(jCard).join(''):'<div class="empty"><div class="empty-ic">🔍</div>ไม่พบ Job</div>'}</div>`;
+}
+function setFilt(s){filterSt=s;pgJobs(document.getElementById('mainContent'))}
+function searchJ(q){const lq=q.toLowerCase();document.querySelectorAll('#jListEl .jcard').forEach(c=>{c.style.display=c.textContent.toLowerCase().includes(lq)?'':'none'})}
+
+function jCard(j) {
+  const ms=(j.members||[]),methods=(j.methods||[]);
+  const avs=`<div class="av av-lead" title="${j.leadName||'-'}">${(j.leadName||'?')[0]}</div>`
+    +ms.slice(0,3).map(m=>`<div class="av av-m" title="${m}">${m[0]}</div>`).join('')
+    +(ms.length>3?`<div class="av av-more">+${ms.length-3}</div>`:'');
+  return `<div class="jcard" onclick="openDetail('${j.id}')">
+    <div class="jcard-top">
+      <div class="jno">${j.jobNo}</div>
+      <div class="jinfo"><div class="jclient">${j.client||'ยังไม่ระบุ Client'}</div><div class="jproj">${j.projectName||'—'}</div></div>
+      ${stBadge(j.status)}
+    </div>
+    <div class="jmeta">
+      ${j.workPlace?`<span class="meta">📍 ${j.workPlace}</span>`:''}
+      ${j.workingDate?`<span class="meta">📅 ${j.workingDate}</span>`:''}
+      ${methods.map(m=>`<span class="mchip">${m}</span>`).join('')}
+    </div>
+    <div class="jfoot"><div class="avatars">${avs}</div><span style="font-size:11px;color:var(--text3)">${fmt(j.createdAt)}</span></div>
+  </div>`;
+}
+
+// ── OPEN JOB ──
+function pgOpenJob(el) {
+  if (session?.user?.role!=='admin') { el.innerHTML='<div class="empty"><div class="empty-ic">🔒</div>เฉพาะ Admin</div>'; return; }
+  const nextNo = genJobNo();
+  el.innerHTML=`
+    <div class="pg-head"><div class="pg-title">Open New Job</div><div class="pg-sub">Admin เปิด Job No. ใหม่เข้าระบบ</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;max-width:440px">
+      <div class="fg" style="margin-bottom:18px">
+        <label>JOB NO. *</label>
+        <input class="fi" id="openJobNo" value="${nextNo}" placeholder="เช่น FLN-2505" style="font-family:var(--font-d);font-size:20px;font-weight:700;color:#a09aff;letter-spacing:.5px" />
+        <span style="font-size:11px;color:var(--text3);margin-top:3px">ระบบออกให้อัตโนมัติ — แก้ไขได้ถ้าต้องการ</span>
+      </div>
+      <div class="fg"><label>หมายเหตุ (ถ้ามี)</label><input class="fi" id="openNote" placeholder="เช่น งานด่วน, Shutdown..." /></div>
+      <button class="btn btn-p" onclick="doOpenJob()">เปิด Job</button>
+    </div>`;
+}
+async function doOpenJob() {
+  const jobNo = document.getElementById('openJobNo').value.trim();
+  if (!jobNo) { toast('กรุณาระบุ Job No.','i'); return; }
+  if (jobs.find(j=>j.jobNo===jobNo)) { toast(`Job No. "${jobNo}" มีอยู่แล้วในระบบ`,'e'); return; }
+  const job={id:Date.now().toString(),jobNo,note:document.getElementById('openNote').value,
+    status:'open',createdAt:Date.now(),methods:[],members:[],createdBy:session?.user?.username};
+  jobs.push(job);
+  await saveJob(job,'saveJob');
+  toast(`เปิด Job ${jobNo} เรียบร้อย`);
+  showPage('dashboard');
+}
+
+// ── ASSIGN ──
+function pgAssign(el, editJobId=null) {
+  if (session?.user?.role!=='pe') { el.innerHTML='<div class="empty"><div class="empty-ic">🔒</div>เฉพาะ Project Engineer</div>'; return; }
+  const openJobs=jobs.filter(j=>j.status==='open');
+  const editJob = editJobId ? jobs.find(j=>j.id===editJobId) : null;
+  _members = editJob ? [...(editJob.members||[])] : [];
+  _customMethods = editJob ? (editJob.methods||[]).filter(m=>!METHODS.includes(m)) : [];
+  el.innerHTML=`
+    <div class="pg-head"><div class="pg-title">${editJob?'แก้ไขงาน':'จ่ายงาน'}</div><div class="pg-sub">${editJob?'แก้ไขรายละเอียดงาน '+editJob.jobNo:'อ้างอิง Job No. จาก Admin แล้วกรอกรายละเอียด'}</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;max-width:580px">
+      <div class="fgrid">
+        <div class="fg full"><label>JOB NO. *</label>
+          ${editJob
+            ? `<div class="fi" style="background:var(--surface3);color:#a09aff;font-family:var(--font-d);font-weight:700">${editJob.jobNo}</div><input type="hidden" id="aJobId" value="${editJob.id}">`
+            : `<select class="fi" id="aJobId">
+            <option value="">— เลือก Job No. —</option>
+            ${openJobs.map(j=>`<option value="${j.id}">${j.jobNo}${j.note?' — '+j.note:''}</option>`).join('')}
+          </select>`}
+        </div>
+        <div class="fg"><label>CLIENT *</label><input class="fi" id="aClient" placeholder="ชื่อลูกค้า" /></div>
+        <div class="fg"><label>PROJECT NAME</label><input class="fi" id="aProject" placeholder="ชื่อโปรเจกต์ (ถ้ามี)" /></div>
+        <div class="fg"><label>WORK PLACE *</label><input class="fi" id="aPlace" placeholder="สถานที่ปฏิบัติงาน" /></div>
+        <div class="fg"><label>WORKING DATE *</label><input class="fi" id="aDate" type="date" /></div>
+        <div class="fg full"><label>WORK METHOD * (เลือกหลายวิธีได้ + พิมพ์เพิ่มเองได้)</label>
+          <div class="msel" id="methodSel">${METHODS.map(m=>`<div class="mopt" data-v="${m}" onclick="this.classList.toggle('on')">${m}</div>`).join('')}</div>
+          <div class="custom-method" style="margin-top:7px">
+            <input class="fi" id="customMethod" placeholder="วิธีอื่นๆ พิมพ์แล้วกด Add" style="flex:1" />
+            <button class="btn btn-o btn-sm" onclick="addCustomMethod()">+ Add</button>
+          </div>
+          <div id="customChips" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px"></div>
+        </div>
+        <div class="fg"><label>หัวหน้าทีม *</label>
+          <select class="fi" id="aLead">
+            <option value="">— เลือกหัวหน้าทีม —</option>
+            ${users.map(u=>`<option value="${u.fullName||u.username}">${u.fullName||u.username} (${ROLES[u.role]||u.role})</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>ลูกทีม</label>
+          <select class="fi" id="aMemberSel" onchange="addMember(this.value)">
+            <option value="">+ เพิ่มสมาชิก</option>
+            ${users.map(u=>`<option value="${u.fullName||u.username}">${u.fullName||u.username}</option>`).join('')}
+          </select>
+        </div>
+        <div class="full"><div class="mtags-area" id="mtagArea"></div></div>
+      </div>
+      <div class="ffoot"><button class="btn btn-o" onclick="showPage('jobs')">ยกเลิก</button><button class="btn btn-p" onclick="doAssign()">จ่ายงาน</button></div>
+    </div>`;
+}
+let _customMethods=[];
+function addCustomMethod(){
+  const v=document.getElementById('customMethod').value.trim();
+  if(!v||_customMethods.includes(v))return;
+  _customMethods.push(v);
+  document.getElementById('customChips').innerHTML=_customMethods.map(m=>
+    `<span class="mchip" style="cursor:pointer" onclick="removeCustomMethod('${m}')">${m} ×</span>`).join('');
+  document.getElementById('customMethod').value='';
+}
+function removeCustomMethod(m){_customMethods=_customMethods.filter(x=>x!==m);addCustomMethod();}
+function addMember(n){if(!n)return;if(!_members.includes(n)){_members.push(n);renderMtags();}document.getElementById('aMemberSel').value='';}
+function removeMember(n){_members=_members.filter(x=>x!==n);renderMtags();}
+function renderMtags(){document.getElementById('mtagArea').innerHTML=_members.map(m=>`<span class="mtag"><span>${m}</span><span class="mtag-x" onclick="removeMember('${m}')">×</span></span>`).join('');}
+async function doAssign(){
+  const jobId=document.getElementById('aJobId').value;
+  const client=document.getElementById('aClient').value.trim();
+  const place=document.getElementById('aPlace').value.trim();
+  const date=document.getElementById('aDate').value;
+  const lead=document.getElementById('aLead').value;
+  const selected=[...document.querySelectorAll('#methodSel .mopt.on')].map(e=>e.dataset.v);
+  const methods=[...selected,..._customMethods];
+  if(!jobId||!client||!place||!date||!lead||!methods.length){toast('กรุณากรอกข้อมูลให้ครบ','i');return;}
+  const job=jobs.find(j=>j.id===jobId);if(!job)return;
+  const isEdit = job.status==='inprogress';
+  Object.assign(job,{client,projectName:document.getElementById('aProject').value,workPlace:place,
+    workingDate:date,methods,leadName:lead,members:[..._members],status:'inprogress',
+    assignedAt:job.assignedAt||Date.now(),assignedBy:job.assignedBy||session?.user?.username,
+    lastEditedAt:Date.now(),lastEditedBy:session?.user?.username});
+  await saveJob(job,'saveJob');
+  toast(isEdit?`แก้ไขงาน ${job.jobNo} เรียบร้อย`:`จ่ายงาน ${job.jobNo} ให้ ${lead} เรียบร้อย`);
+  showPage('jobs');
+}
+
+// ── USERS PANEL ──
+async function pgUsers(el) {
+  if (session?.user?.role!=='admin') { el.innerHTML='<div class="empty"><div class="empty-ic">🔒</div>เฉพาะ Admin</div>'; return; }
+  const res=await apiCall('getUsers');
+  if(res.ok&&res.users) users=res.users;
+  el.innerHTML=`
+    <div class="pg-head"><div class="pg-title">จัดการ Users</div><div class="pg-sub">เพิ่ม ลบ แก้ไข บัญชีผู้ใช้งาน</div></div>
+    <div class="sec-head" style="margin-bottom:16px">
+      <div class="sec-title">รายชื่อผู้ใช้ทั้งหมด</div>
+      <button class="btn btn-p btn-sm" onclick="openUserMo()">+ เพิ่ม User</button>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <table class="adm-table">
+        <thead><tr><th>Username</th><th>ชื่อ-สกุล</th><th>Role</th><th>Email</th><th>Action</th></tr></thead>
+        <tbody>
+          ${users.map(u=>`<tr>
+            <td style="font-family:var(--font-d);font-weight:600">${u.username}</td>
+            <td>${u.fullName||'—'}</td>
+            <td><span class="tbar-role-badge role-${u.role}">${ROLES[u.role]||u.role}</span></td>
+            <td style="color:var(--text2);font-size:12px">${u.email||'<span style="color:var(--text3)">ยังไม่ระบุ</span>'}</td>
+            <td><button class="btn btn-r btn-sm" onclick="deleteUser('${u.id}')">ลบ</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function openUserMo() {
+  document.getElementById('userMoBody').innerHTML=`
+    <div class="mo-head"><div class="mo-title">เพิ่ม User ใหม่</div><div class="mo-x" onclick="closeMo('userMo')">×</div></div>
+    <div class="fg"><label>USERNAME *</label><input class="fi" id="nuUser" placeholder="username" /></div>
+    <div class="fg"><label>PASSWORD *</label><input class="fi" id="nuPass" type="password" placeholder="รหัสผ่าน" /></div>
+    <div class="fg"><label>ชื่อ-สกุล *</label><input class="fi" id="nuName" placeholder="ชื่อเต็ม" /></div>
+    <div class="fg"><label>EMAIL (สำหรับรับแจ้งเตือน)</label><input class="fi" id="nuEmail" type="email" placeholder="example@company.com" /></div>
+    <div class="fg"><label>ROLE *</label>
+      <select class="fi" id="nuRole">
+        <option value="admin">Admin</option>
+        <option value="pe">Project Engineer</option>
+        <option value="lead">Team Leader</option>
+      </select>
+    </div>
+    <div class="ffoot"><button class="btn btn-o" onclick="closeMo('userMo')">ยกเลิก</button><button class="btn btn-p" onclick="doAddUser()">เพิ่ม User</button></div>`;
+  document.getElementById('userMo').classList.add('open');
+}
+
+async function doAddUser() {
+  const username=document.getElementById('nuUser').value.trim();
+  const pass=document.getElementById('nuPass').value;
+  const fullName=document.getElementById('nuName').value.trim();
+  const role=document.getElementById('nuRole').value;
+  if(!username||!pass||!fullName){toast('กรุณากรอกให้ครบ','i');return;}
+  if(users.find(u=>u.username===username)){toast('Username นี้มีอยู่แล้ว','e');return;}
+  const passwordHash=await sha256(pass);
+  const email=document.getElementById('nuEmail').value.trim();
+  const user={id:Date.now().toString(),username,passwordHash,fullName,email,role};
+  users.push(user);
+  const res=await apiCall('saveUser',{user});
+  if(!res.ok||res.local) localStorage.setItem('falconUsers',JSON.stringify(users));
+  toast(`เพิ่ม User "${username}" เรียบร้อย`);
+  closeMo('userMo');
+  pgUsers(document.getElementById('mainContent'));
+}
+
+async function deleteUser(id) {
+  if(!confirm('ยืนยันลบ User นี้?'))return;
+  users=users.filter(u=>u.id!==id);
+  const res=await apiCall('deleteUser',{id});
+  if(!res.ok||res.local) localStorage.setItem('falconUsers',JSON.stringify(users));
+  toast('ลบ User เรียบร้อย','i');
+  pgUsers(document.getElementById('mainContent'));
+}
+
+// ── SETTINGS ──
+function pgSettings(el) {
+  if (session?.user?.role!=='admin') { el.innerHTML='<div class="empty"><div class="empty-ic">🔒</div>เฉพาะ Admin</div>'; return; }
+  el.innerHTML=`
+    <div class="pg-head"><div class="pg-title">ตั้งค่าระบบ</div><div class="pg-sub">เชื่อมต่อ Google Sheet ผ่าน Apps Script</div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;max-width:540px;overflow:hidden">
+      <div class="fg"><label>APPS SCRIPT URL</label>
+        <input class="fi" id="sUrl" value="${CFG.scriptUrl}" placeholder="https://script.google.com/macros/s/.../exec" />
+        <span style="font-size:11px;color:var(--text3);margin-top:3px">Deploy Apps Script แล้ว copy URL มาวางที่นี่</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="saveScriptUrl()">บันทึก URL</button>
+        <button class="btn btn-o" onclick="testConn()">ทดสอบการเชื่อมต่อ</button>
+      </div>
+      <div id="connResult" style="margin-top:12px"></div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
+      <div class="sec-title" style="margin-bottom:8px">Apps Script Code</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">คัดลอก code นี้ไปวางใน Google Apps Script แทน code เดิมทั้งหมด</div>
+      <button class="btn btn-p" style="width:100%" onclick="copyCode()">📋 คัดลอก Apps Script Code</button>
+    </div>`;
+  // gsCode display removed
+}
+
+function saveScriptUrl() {
+  CFG.scriptUrl = document.getElementById('sUrl').value.trim();
+  localStorage.setItem('falconScriptUrl', CFG.scriptUrl);
+  document.getElementById('cfg-banner').style.display = CFG.scriptUrl ? 'none' : 'flex';
+  toast('บันทึก URL เรียบร้อย');
+}
+
+async function testConn() {
+  const url = document.getElementById('sUrl').value.trim();
+  if (!url) { toast('กรุณาใส่ URL ก่อน','i'); return; }
+  document.getElementById('connResult').innerHTML='<div class="alert" style="background:var(--surface2);border:1px solid var(--border2)">⏳ กำลังทดสอบ...</div>';
+  try {
+    const res = await fetch(url + '?action=ping');
+    const json = await res.json();
+    if (json.ok) {
+      CFG.scriptUrl = url;
+      localStorage.setItem('falconScriptUrl', url);
+      document.getElementById('cfg-banner').style.display = 'none';
+      document.getElementById('connResult').innerHTML='<div class="alert alert-g">✅ เชื่อมต่อสำเร็จ! บันทึก URL อัตโนมัติแล้ว</div>';
+      toast('เชื่อมต่อสำเร็จ!');
+    } else {
+      document.getElementById('connResult').innerHTML=`<div class="alert alert-r">❌ Script ตอบกลับ error: ${json.message||'unknown'}</div>`;
+    }
+  } catch(e) {
+    document.getElementById('connResult').innerHTML=`<div class="alert alert-r">❌ เชื่อมต่อไม่ได้: ${e.message}</div>`;
+  }
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(getAppsScriptCode()).then(()=>toast('คัดลอก Code เรียบร้อย'));
+}
+
+
+// ── DETAIL MODAL ──
+function openDetail(id) {
+  const j=jobs.find(x=>x.id===id); if(!j) return;
+  const role=session?.user?.role;
+  const steps=[
+    {label:'เปิด Job (Admin)',done:true,ts:j.createdAt},
+    {label:'จ่ายงาน / In Progress',done:!!j.assignedAt,ts:j.assignedAt},
+    {label:'จบหน้างาน',done:!!j.siteDoneAt,ts:j.siteDoneAt,
+      show:role==='lead'&&j.status==='inprogress',
+      locked: role==='lead'&&j.status==='inprogress'&&j.workingDate&&(new Date().setHours(0,0,0,0)<new Date(j.workingDate).setHours(0,0,0,0)),
+      lockMsg: j.workingDate?`ล็อคจนถึงวันที่ ${new Date(j.workingDate).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}`:'',
+      act:`updSt('${id}','site_done','siteDoneAt')`,lbl:'ยืนยันจบหน้างาน'},
+    {label:'ส่งรายงานลูกค้า',done:!!j.reportedAt,ts:j.reportedAt,
+      show:role==='lead'&&j.status==='site_done',
+      act:`updSt('${id}','reported','reportedAt')`,lbl:'ยืนยันส่งรายงานแล้ว'},
+    {label:'ออกใบแจ้งหนี้',done:!!j.invoicedAt,ts:j.invoicedAt,
+      show:role==='admin'&&j.status==='reported',
+      act:`updSt('${id}','invoiced','invoicedAt')`,lbl:'ยืนยันออกใบแจ้งหนี้'},
+  ];
+  const tl=steps.map((s,i)=>`
+    <div class="tl-item">
+      <div class="tl-dc">
+        <div class="tl-dot ${s.done?'done':(!steps[i-1]||steps[i-1].done)?'active':''}"></div>
+        ${i<steps.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-c">
+        <div class="tl-step ${s.done?'done':''}">${s.label}</div>
+        <div class="tl-ts">${s.ts?fmt(s.ts):'รอดำเนินการ'}</div>
+        ${s.show?(s.locked
+          ?`<div class="tl-act"><button class="btn btn-sm" disabled style="background:var(--surface3);color:var(--text3);border:1px solid var(--border);cursor:not-allowed">🔒 ${s.lockMsg}</button></div>`
+          :`<div class="tl-act"><button class="btn btn-g btn-sm" onclick="${s.act}">${s.lbl}</button></div>`)
+          :''}
+      </div>
+    </div>`).join('');
+  const canDel=role==='admin'&&['open'].includes(j.status);
+  const canEdit=role==='pe'&&['inprogress'].includes(j.status);
+  document.getElementById('detailMoBody').innerHTML=`
+    <div class="mo-head">
+      <div><div style="font-size:11px;color:var(--text3);margin-bottom:3px">JOB DETAILS</div><div class="mo-title">${j.jobNo}</div></div>
+      <div style="display:flex;gap:8px;align-items:center">${stBadge(j.status)}<div class="mo-x" onclick="closeMo('detailMo')">×</div></div>
+    </div>
+    <div style="margin-bottom:18px">
+      <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:10px">ข้อมูลงาน</div>
+      <div class="dr"><div class="dk">Client</div><div class="dv">${j.client||'ยังไม่ระบุ'}</div></div>
+      <div class="dr"><div class="dk">Project Name</div><div class="dv">${j.projectName||'—'}</div></div>
+      <div class="dr"><div class="dk">Work Place</div><div class="dv">${j.workPlace||'ยังไม่ระบุ'}</div></div>
+      <div class="dr"><div class="dk">Working Date</div><div class="dv">${j.workingDate||'ยังไม่ระบุ'}</div></div>
+      <div class="dr"><div class="dk">Work Method</div><div class="dv">${(j.methods||[]).map(m=>`<span class="mchip">${m}</span>`).join('')||'—'}</div></div>
+    </div>
+    <div style="margin-bottom:18px">
+      <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:10px">ทีมงาน</div>
+      <div class="dr"><div class="dk">หัวหน้าทีม</div><div class="dv"><div class="av av-lead" style="width:22px;height:22px;font-size:9px">${(j.leadName||'?')[0]}</div>${j.leadName||'ยังไม่ระบุ'}</div></div>
+      <div class="dr"><div class="dk">ลูกทีม</div><div class="dv">${(j.members||[]).join(', ')||'—'}</div></div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:12px">PROGRESS TIMELINE</div>
+      <div class="tl">${tl}</div>
+    </div>
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+      ${canEdit?`<button class="btn btn-o btn-sm" onclick="closeMo('detailMo');pgAssign(document.getElementById('mainContent'),'${id}')">✏️ แก้ไขวันทำงาน / รายละเอียด</button>`:''}
+      ${canDel?`<button class="btn btn-r btn-sm" onclick="delJob('${id}')">ลบ Job นี้</button>`:''}
+    </div>`;
+  document.getElementById('detailMo').classList.add('open');
+}
+
+function closeMo(id) { document.getElementById(id).classList.remove('open'); }
+document.getElementById('detailMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMo('detailMo')});
+document.getElementById('userMo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMo('userMo')});
+
+async function updSt(id, status, tsField) {
+  const job=jobs.find(j=>j.id===id);if(!job)return;
+  job.status=status; job[tsField]=Date.now(); job.updatedBy=session?.user?.username;
+  await saveJob(job,'saveJob');
+
+  // ── ส่ง email แจ้ง Admin + PE เมื่อหัวหน้าทีมกด "ส่งรายงานแล้ว" ──
+  if (status==='reported') {
+    const recipients = users
+      .filter(u=>['admin','pe'].includes(u.role) && u.email)
+      .map(u=>u.email);
+    if (recipients.length && CFG.scriptUrl) {
+      await apiCall('sendReportEmail', { job, recipients });
+      toast(`ส่ง email แจ้ง ${recipients.length} คน เรียบร้อย`, 's');
+    } else if (!CFG.scriptUrl) {
+      toast('ยังไม่ได้ตั้งค่า Apps Script — ไม่ได้ส่ง email', 'i');
+    } else if (!recipients.length) {
+      toast('ไม่พบ email ของ Admin/PE — กรุณาเพิ่ม email ใน Admin Panel', 'i');
+    }
+  }
+
+  closeMo('detailMo');
+  toast(`อัปเดตสถานะ "${job.jobNo}" เรียบร้อย`);
+  showPage(curPage);
+}
+
+async function delJob(id) {
+  if(!confirm('ยืนยันลบ Job นี้?'))return;
+  jobs=jobs.filter(j=>j.id!==id);
+  const res=await apiCall('deleteJob',{id});
+  if(!res.ok||res.local) saveJobsLocal();
+  closeMo('detailMo');
+  toast('ลบ Job เรียบร้อย','i');
+  showPage('dashboard');
+}
+
+// ══════════════════════════════════════════
+//  APPS SCRIPT CODE (to copy)
+// ══════════════════════════════════════════
+function getAppsScriptCode() {
+  return `// ═══ Falcon Work Assignment — Apps Script Backend ═══
+// วาง code นี้ใน Google Apps Script แล้ว Deploy เป็น Web App
+// Execute as: Me | Who has access: Anyone
+
+const SS = SpreadsheetApp.getActiveSpreadsheet();
+
+function getSheet(name) {
+  let sh = SS.getSheetByName(name);
+  if (!sh) sh = SS.insertSheet(name);
+  return sh;
+}
+
+function doGet(e) {
+  const action = e.parameter.action;
+  if (action === 'ping') return resp({ ok: true, message: 'Falcon online!' });
+  if (action === 'login') return handleLogin(e.parameter);
+  if (action === 'getJobs') return resp({ ok: true, jobs: readSheet('Jobs') });
+  if (action === 'getUsers') return resp({ ok: true, users: readUsers() });
+  return resp({ ok: false, message: 'Unknown action' });
+}
+
+function doPost(e) {
+  try {
+    const d = JSON.parse(e.postData.contents);
+    const action = d.action;
+    if (action === 'saveJob') return saveRow('Jobs', d.job);
+    if (action === 'deleteJob') return deleteRow('Jobs', d.id);
+    if (action === 'saveUser') return saveRow('Users', d.user);
+    if (action === 'deleteUser') return deleteRow('Users', d.id);
+    if (action === 'sendReportEmail') return sendReportEmail(d.job, d.recipients);
+    return resp({ ok: false, message: 'Unknown action' });
+  } catch(err) {
+    return resp({ ok: false, error: err.toString() });
+  }
+}
+
+function handleLogin(params) {
+  const users = readUsers();
+  const user = users.find(u => u.username === params.username && u.passwordHash === params.passwordHash);
+  if (!user) return resp({ ok: false, message: 'Invalid credentials' });
+  const safeUser = { ...user }; delete safeUser.passwordHash;
+  return resp({ ok: true, user: safeUser, users: users.map(u => ({ ...u })) });
+}
+
+function readSheet(name) {
+  const sh = getSheet(name);
+  if (sh.getLastRow() < 2) return [];
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  return data.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      try { obj[h] = JSON.parse(row[i]); } catch { obj[h] = row[i]; }
+    });
+    return obj;
+  });
+}
+
+function readUsers() {
+  return readSheet('Users');
+}
+
+function saveRow(sheetName, record) {
+  const sh = getSheet(sheetName);
+  const json = JSON.stringify(record);
+  // check if exists by id
+  if (sh.getLastRow() > 1) {
+    const data = sh.getDataRange().getValues();
+    const headers = data[0];
+    const idCol = headers.indexOf('id');
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][idCol]) === String(record.id)) {
+        // update entire row as JSON in col A, or update per-field
+        updateRow(sh, i+1, headers, record);
+        return resp({ ok: true, action: 'updated' });
+      }
+    }
+  }
+  // insert new
+  if (sh.getLastRow() === 0 || sh.getLastRow() === (sh.getLastRow()===0?0:0)) {
+    const keys = Object.keys(record);
+    if (sh.getLastRow() === 0) sh.appendRow(keys);
+    else {
+      const existing = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+      if (existing.length === 0 || existing[0] === '') sh.appendRow(keys);
+    }
+  }
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  if (headers.length === 0 || headers[0] === '') {
+    sh.appendRow(Object.keys(record));
+    const newHeaders = Object.keys(record);
+    sh.appendRow(newHeaders.map(h => {
+      const v = record[h];
+      return typeof v === 'object' ? JSON.stringify(v) : v;
+    }));
+  } else {
+    sh.appendRow(headers.map(h => {
+      const v = record[h];
+      return typeof v === 'object' ? JSON.stringify(v) : (v ?? '');
+    }));
+  }
+  return resp({ ok: true, action: 'inserted' });
+}
+
+function updateRow(sh, rowIndex, headers, record) {
+  const row = headers.map(h => {
+    const v = record[h];
+    return typeof v === 'object' ? JSON.stringify(v) : (v ?? '');
+  });
+  sh.getRange(rowIndex, 1, 1, row.length).setValues([row]);
+}
+
+function deleteRow(sheetName, id) {
+  const sh = getSheet(sheetName);
+  if (sh.getLastRow() < 2) return resp({ ok: true });
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf('id');
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][idCol]) === String(id)) {
+      sh.deleteRow(i + 1);
+      return resp({ ok: true });
+    }
+  }
+  return resp({ ok: false, message: 'Row not found' });
+}
+
+function sendReportEmail(job, recipients) {
+  try {
+    if (!recipients || recipients.length === 0) return resp({ ok: false, message: 'No recipients' });
+    const methods = Array.isArray(job.methods) ? job.methods.join(', ') : (job.methods || '—');
+    const members = Array.isArray(job.members) ? job.members.join(', ') : (job.members || '—');
+    const reportedAt = job.reportedAt ? new Date(job.reportedAt).toLocaleString('th-TH') : '—';
+    const subject = \`[Falcon] ส่งรายงานแล้ว — \${job.jobNo} / \${job.client || ''}\`;
+    const body = \`รายงานถูกส่งให้ลูกค้าเรียบร้อยแล้ว
+
+────────────────────────
+Job No.        : \${job.jobNo}
+Client         : \${job.client || '—'}
+Project Name   : \${job.projectName || '—'}
+Work Place     : \${job.workPlace || '—'}
+Working Date   : \${job.workingDate || '—'}
+Work Method    : \${methods}
+หัวหน้าทีม     : \${job.leadName || '—'}
+ลูกทีม         : \${members}
+────────────────────────
+ส่งรายงาน เมื่อ : \${reportedAt}
+อัปเดตโดย      : \${job.updatedBy || '—'}
+────────────────────────
+
+กรุณาดำเนินการออกใบแจ้งหนี้ต่อไป
+
+— Falcon Work Assignment System\`;
+
+    const htmlBody = \`<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <div style="background:#7c6fff;color:#fff;padding:16px 24px;border-radius:10px 10px 0 0">
+        <h2 style="margin:0;font-size:18px">🦅 Falcon Work Assignment</h2>
+        <p style="margin:4px 0 0;opacity:.85;font-size:13px">แจ้งเตือน: ส่งรายงานให้ลูกค้าแล้ว</p>
+      </div>
+      <div style="background:#f9f9fb;border:1px solid #e5e5e5;border-top:none;padding:20px 24px;border-radius:0 0 10px 10px">
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <tr><td style="padding:6px 0;color:#666;width:130px">Job No.</td><td style="font-weight:700;color:#7c6fff">\${job.jobNo}</td></tr>
+          <tr><td style="padding:6px 0;color:#666">Client</td><td style="font-weight:600">\${job.client || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#666">Project</td><td>\${job.projectName || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#666">Work Place</td><td>\${job.workPlace || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#666">Working Date</td><td>\${job.workingDate || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#666">Work Method</td><td><strong>\${methods}</strong></td></tr>
+          <tr><td style="padding:6px 0;color:#666">หัวหน้าทีม</td><td>\${job.leadName || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#666">ลูกทีม</td><td>\${members}</td></tr>
+        </table>
+        <hr style="border:none;border-top:1px solid #e5e5e5;margin:14px 0">
+        <p style="margin:0;font-size:13px;color:#666">ส่งรายงาน เมื่อ <strong>\${reportedAt}</strong> โดย <strong>\${job.updatedBy || '—'}</strong></p>
+        <div style="margin-top:16px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:12px 16px;font-size:13px;color:#856404">
+          ⚠️ กรุณาดำเนินการ<strong>ออกใบแจ้งหนี้</strong>ต่อไป
+        </div>
+      </div>
+    </div>\`;
+
+    MailApp.sendEmail({
+      to: recipients.join(','),
+      subject: subject,
+      body: body,
+      htmlBody: htmlBody
+    });
+    return resp({ ok: true, sent: recipients.length });
+  } catch(err) {
+    return resp({ ok: false, error: err.toString() });
+  }
+}
+
+function resp(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── INIT: สร้าง Users sheet เริ่มต้น ──
+function setupInitialUsers() {
+  const sh = getSheet('Users');
+  if (sh.getLastRow() > 0) return;
+  // headers
+  sh.appendRow(['id','username','passwordHash','fullName','email','role']);
+  // demo users (SHA-256 ของ password)
+  // admin123 = 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a
+  // pe123    = ด้วย sha256 ที่ browser คำนวณให้ (ใส่ hash จริงที่นี่หลัง deploy)
+  sh.appendRow(['u1','admin','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a','Admin ระบบ','admin']);
+}`;
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+async function init() {
+  await initDemoHashes();
+  // seed demo data
+  if (!localStorage.getItem('falconJobs')) {
+    const demo=[
+      {id:'d1',jobNo:'FLN-2501',client:'SCG Chemicals',projectName:'ตรวจสอบถัง Tank Farm A',workPlace:'มาบตาพุด ระยอง',workingDate:'2025-04-20',methods:['UT','RT'],leadName:'หัวหน้า วิชัย',members:['สมชาย ใจดี','อนงค์ ขยันขัน'],status:'inprogress',createdAt:Date.now()-86400000*3,assignedAt:Date.now()-86400000*2,createdBy:'admin'},
+      {id:'d2',jobNo:'FLN-2502',client:'PTT Exploration',projectName:'Pipeline Inspection Q2',workPlace:'ชลบุรี',workingDate:'2025-04-18',methods:['MT','PT','VT'],leadName:'หัวหน้า วิชัย',members:['สมหญิง รักงาน'],status:'site_done',createdAt:Date.now()-86400000*5,assignedAt:Date.now()-86400000*4,siteDoneAt:Date.now()-86400000,createdBy:'admin'},
+      {id:'d3',jobNo:'FLN-2503',client:'IRPC',projectName:'',workPlace:'ระยอง',workingDate:'2025-04-25',methods:['Drone','PMI'],leadName:'',members:[],status:'open',createdAt:Date.now()-3600000,createdBy:'admin'},
+      {id:'d4',jobNo:'FLN-2504',client:'Dow Chemical',projectName:'Annual Inspection 2025',workPlace:'Map Ta Phut',workingDate:'2025-04-10',methods:['UT','ET'],leadName:'หัวหน้า วิชัย',members:['วิศวกร สมชาย'],status:'reported',createdAt:Date.now()-86400000*10,assignedAt:Date.now()-86400000*9,siteDoneAt:Date.now()-86400000*6,reportedAt:Date.now()-86400000*2,createdBy:'admin'},
+    ];
+    localStorage.setItem('falconJobs', JSON.stringify(demo));
+  }
+  if (restoreSession()) startApp();
+}
+
+// Enter key login
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginPass').focus(); });
+
+init();
+
+// Show mobile nav only on real touch devices
+if ('ontouchstart' in window && window.innerWidth <= 768) {
+    document.querySelector('.main').style.paddingBottom = '80px';
+}
+</script>
+</body>
+</html>
