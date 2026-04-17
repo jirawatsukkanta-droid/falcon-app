@@ -688,6 +688,7 @@ function pgAssign(el, editJobId=null) {
   const openJobs=jobs.filter(j=>j.status==='open');
   const editJob = editJobId ? jobs.find(j=>j.id===editJobId) : null;
   _members = editJob ? [...(editJob.members||[])] : [];
+  _workDates = editJob && editJob.workingDate ? editJob.workingDate.split(', ').filter(Boolean) : [];
   _customMethods = editJob ? (editJob.methods||[]).filter(m=>!METHODS.includes(m)) : [];
   el.innerHTML=`
     <div class="pg-head"><div class="pg-title">${editJob?'แก้ไขงาน':'จ่ายงาน'}</div><div class="pg-sub">${editJob?'แก้ไขรายละเอียดงาน '+editJob.jobNo:'อ้างอิง Job No. จาก Admin แล้วกรอกรายละเอียด'}</div></div>
@@ -696,15 +697,35 @@ function pgAssign(el, editJobId=null) {
         <div class="fg full"><label>JOB NO. *</label>
           ${editJob
             ? `<div class="fi" style="background:var(--surface3);color:#a09aff;font-family:var(--font-d);font-weight:700">${editJob.jobNo}</div><input type="hidden" id="aJobId" value="${editJob.id}">`
-            : `<select class="fi" id="aJobId">
+            : `<select class="fi" id="aJobId" onchange="fillClientFromJob(this.value)">
             <option value="">— เลือก Job No. —</option>
-            ${openJobs.map(j=>`<option value="${j.id}">${j.jobNo}${j.note?' — '+j.note:''}</option>`).join('')}
+            ${openJobs.map(j=>`<option value="${j.id}">${j.jobNo}</option>`).join('')}
           </select>`}
         </div>
-        <div class="fg"><label>CLIENT *</label><input class="fi" id="aClient" placeholder="ชื่อลูกค้า" /></div>
-        <div class="fg"><label>PROJECT NAME</label><input class="fi" id="aProject" placeholder="ชื่อโปรเจกต์ (ถ้ามี)" /></div>
-        <div class="fg"><label>WORK PLACE *</label><input class="fi" id="aPlace" placeholder="สถานที่ปฏิบัติงาน" /></div>
-        <div class="fg"><label>WORKING DATE *</label><input class="fi" id="aDate" type="date" /></div>
+        <div class="fg"><label>CLIENT</label><input class="fi" id="aClient" placeholder="ชื่อลูกค้า (ดึงอัตโนมัติจาก Job)" readonly style="background:var(--surface3);color:var(--text2)" /></div>
+        <div class="fg"><label>PROJECT NAME</label><input class="fi" id="aProject" placeholder="ชื่อโปรเจกต์ (ถ้ามี)" ${editJob?`value="${editJob.projectName||''}"`:''}  /></div>
+        <div class="fg"><label>WORK PLACE *</label><input class="fi" id="aPlace" placeholder="สถานที่ปฏิบัติงาน" ${editJob?`value="${editJob.workPlace||''}"`:''}  /></div>
+        <div class="fg full"><label>WORKING DATE * <span style="font-size:11px;color:var(--text3);font-weight:400">— เพิ่มได้หลายวัน</span></label>
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px">📅 DATE RANGE (วันต่อเนื่อง)</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input class="fi" id="aDateFrom" type="date" style="flex:1;min-width:120px" placeholder="วันเริ่ม" />
+                <span style="color:var(--text3);font-size:13px">ถึง</span>
+                <input class="fi" id="aDateTo" type="date" style="flex:1;min-width:120px" placeholder="วันสิ้นสุด" />
+                <button class="btn btn-o btn-sm" onclick="addDateRange()">+ เพิ่ม</button>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:10px">
+              <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px">➕ เพิ่มวันแยก (วันไม่ต่อเนื่อง)</div>
+              <div style="display:flex;gap:8px">
+                <input class="fi" id="aDateInput" type="date" style="flex:1" />
+                <button class="btn btn-o btn-sm" onclick="addWorkDate()">+ เพิ่มวัน</button>
+              </div>
+            </div>
+          </div>
+          <div id="dateTagsArea" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:28px"></div>
+        </div>
         <div class="fg full"><label>WORK METHOD * (เลือกหลายวิธีได้ + พิมพ์เพิ่มเองได้)</label>
           <div class="msel" id="methodSel">${METHODS.map(m=>`<div class="mopt" data-v="${m}" onclick="this.classList.toggle('on')">${m}</div>`).join('')}</div>
           <div class="custom-method" style="margin-top:7px">
@@ -743,19 +764,71 @@ function removeCustomMethod(m){_customMethods=_customMethods.filter(x=>x!==m);ad
 function addMember(n){if(!n)return;if(!_members.includes(n)){_members.push(n);renderMtags();}document.getElementById('aMemberSel').value='';}
 function removeMember(n){_members=_members.filter(x=>x!==n);renderMtags();}
 function renderMtags(){document.getElementById('mtagArea').innerHTML=_members.map(m=>`<span class="mtag"><span>${m}</span><span class="mtag-x" onclick="removeMember('${m}')">×</span></span>`).join('');}
+function fillClientFromJob(jobId) {
+  const job = jobs.find(j=>j.id===jobId);
+  if (job && job.client) {
+    document.getElementById('aClient').value = job.client;
+  } else {
+    document.getElementById('aClient').value = '';
+  }
+}
+
+let _workDates = [];
+function addDateRange() {
+  const from = document.getElementById('aDateFrom').value;
+  const to = document.getElementById('aDateTo').value;
+  if (!from || !to) { toast('กรุณาเลือกวันเริ่มและวันสิ้นสุด','i'); return; }
+  if (from > to) { toast('วันเริ่มต้องมาก่อนวันสิ้นสุด','i'); return; }
+  const d = new Date(from);
+  const end = new Date(to);
+  let added = 0;
+  while (d <= end) {
+    const str = d.toISOString().split('T')[0];
+    if (!_workDates.includes(str)) { _workDates.push(str); added++; }
+    d.setDate(d.getDate() + 1);
+  }
+  _workDates.sort();
+  renderDateTags();
+  document.getElementById('aDateFrom').value = '';
+  document.getElementById('aDateTo').value = '';
+  toast(`เพิ่ม ${added} วันเรียบร้อย`);
+}
+
+function addWorkDate() {
+  const v = document.getElementById('aDateInput').value;
+  if (!v) return;
+  if (_workDates.includes(v)) { toast('วันนี้เพิ่มไปแล้ว','i'); return; }
+  _workDates.push(v);
+  _workDates.sort();
+  renderDateTags();
+  document.getElementById('aDateInput').value = '';
+}
+function removeWorkDate(d) {
+  _workDates = _workDates.filter(x=>x!==d);
+  renderDateTags();
+}
+function renderDateTags() {
+  const area = document.getElementById('dateTagsArea');
+  if (!area) return;
+  area.innerHTML = _workDates.map(d=>`
+    <span class="mtag">
+      <span>📅 ${new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}</span>
+      <span class="mtag-x" onclick="removeWorkDate('${d}')">×</span>
+    </span>`).join('');
+}
+
 async function doAssign(){
   const jobId=document.getElementById('aJobId').value;
   const client=document.getElementById('aClient').value.trim();
   const place=document.getElementById('aPlace').value.trim();
-  const date=document.getElementById('aDate').value;
   const lead=document.getElementById('aLead').value;
   const selected=[...document.querySelectorAll('#methodSel .mopt.on')].map(e=>e.dataset.v);
   const methods=[...selected,..._customMethods];
-  if(!jobId||!client||!place||!date||!lead||!methods.length){toast('กรุณากรอกข้อมูลให้ครบ','i');return;}
+  if(!jobId||!place||!lead||!methods.length||!_workDates.length){toast('กรุณากรอกข้อมูลให้ครบ (Work Place, Working Date, Work Method, หัวหน้าทีม)','i');return;}
   const job=jobs.find(j=>j.id===jobId);if(!job)return;
   const isEdit = job.status==='inprogress';
-  Object.assign(job,{client,projectName:document.getElementById('aProject').value,workPlace:place,
-    workingDate:date,methods,leadName:lead,members:[..._members],status:'inprogress',
+  Object.assign(job,{client:client||job.client,projectName:document.getElementById('aProject').value,workPlace:place,
+    workingDate:_workDates.join(', '),methods,leadName:lead,members:[..._members],status:'inprogress',
     assignedAt:job.assignedAt||Date.now(),assignedBy:job.assignedBy||session?.user?.username,
     lastEditedAt:Date.now(),lastEditedBy:session?.user?.username});
   await saveJob(job,'saveJob');
