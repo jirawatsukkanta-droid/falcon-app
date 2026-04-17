@@ -985,7 +985,7 @@ function copyCode() {
 
 // ── DETAIL MODAL ──
 function openDetail(id) {
-  const j=jobs.find(x=>x.id===id); if(!j) return;
+  let j=jobs.find(x=>String(x.id)===String(id)); if(!j){ loadJobs().then(()=>{ j=jobs.find(x=>String(x.id)===String(id)); if(j) openDetail(id); }); return; }
   const role=session?.user?.role;
   const steps=[
     {label:'เปิด Job (Admin)',done:true,ts:j.createdAt},
@@ -1079,7 +1079,7 @@ async function updSt(id, status, tsField) {
 
 async function delJob(id) {
   if(!confirm('ยืนยันลบ Job นี้?'))return;
-  jobs=jobs.filter(j=>j.id!==id);
+  jobs=jobs.filter(j=>String(j.id)!==String(id));
   const res=await apiCall('deleteJob',{id});
   if(!res.ok||res.local) saveJobsLocal();
   closeMo('detailMo');
