@@ -679,9 +679,10 @@ async function doOpenJob() {
 // ── ASSIGN ──
 async function pgAssign(el, editJobId=null) {
   if (session?.user?.role!=='pe') { el.innerHTML='<div class="empty"><div class="empty-ic">🔒</div>เฉพาะ Project Engineer</div>'; return; }
-  // Load latest users from API first
+  // Load latest users and jobs from API first
   const ures = await apiCall('getUsers');
   if (ures.ok && ures.users) users = ures.users;
+  await loadJobs();
   const openJobs=jobs.filter(j=>j.status==='open');
   const editJob = editJobId ? jobs.find(j=>j.id===editJobId) : null;
   _members = editJob ? [...(editJob.members||[])] : [];
