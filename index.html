@@ -417,19 +417,32 @@ function toast(msg, type='s') {
 //  API — Google Sheet via Apps Script
 // ══════════════════════════════════════════
 async function apiCall(action, data={}) {
-  if (!CFG.scriptUrl) return { ok:false, local:true };
+  if (!CFG.scriptUrl) return { ok:false, local:true, message:'ยังไม่ได้ตั้งค่า Apps Script URL' };
   try {
-    const isRead = ['login','getJobs','getUsers'].includes(action);
+    // ใช้ GET สำหรับ action ที่ไม่ต้องมี payload ใหญ่ (เลี่ยง CORS preflight กับ Apps Script)
+    const useGet = ['login','getJobs','getUsers','ping','sendReportEmail','sendTestEmail'].includes(action);
     let res;
-    if (isRead) {
-      const qs = new URLSearchParams({ action, ...Object.fromEntries(Object.entries(data).map(([k,v])=>[k,JSON.stringify(v)])) });
-      res = await fetch(CFG.scriptUrl + '?' + qs.toString());
+    if (useGet) {
+      const qs = new URLSearchParams({ action, ...Object.fromEntries(Object.entries(data).map(([k,v])=>[k, typeof v==='string'?v:JSON.stringify(v)])) });
+      const url = CFG.scriptUrl + '?' + qs.toString();
+      console.log('[apiCall GET]', action, url.length>500?url.slice(0,500)+'...':url);
+      res = await fetch(url, { redirect:'follow' });
     } else {
-      res = await fetch(CFG.scriptUrl, { method:'POST', body: JSON.stringify({ action, ...data }) });
+      console.log('[apiCall POST]', action, data);
+      // ใช้ text/plain เพื่อหลีกเลี่ยง CORS preflight (Apps Script จะอ่าน e.postData.contents เป็น string ปกติ)
+      res = await fetch(CFG.scriptUrl, { method:'POST', body: JSON.stringify({ action, ...data }), redirect:'follow' });
     }
-    const json = await res.json();
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); }
+    catch(parseErr) {
+      console.error('[apiCall] ไม่ใช่ JSON:', text.slice(0,200));
+      return { ok:false, error:'Apps Script ไม่ตอบ JSON — อาจ deploy version เก่าหรือ script error', raw:text.slice(0,300) };
+    }
+    console.log('[apiCall result]', action, json);
     return json;
   } catch(e) {
+    console.error('[apiCall error]', action, e);
     return { ok:false, error: e.message };
   }
 }
@@ -952,12 +965,48 @@ function pgSettings(el) {
         <button class="btn btn-o" onclick="testConn()">ทดสอบการเชื่อมต่อ</button>
       </div>
       <div id="connResult" style="margin-top:12px"></div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
+      <div class="sec-title" style="margin-bottom:8px">ทดสอบส่ง Email</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">ใช้ตรวจว่า Apps Script ส่งอีเมลได้จริงหรือไม่ (หากส่งไม่ได้ ต้อง Authorize MailApp ใน Apps Script ก่อน)</div>
+      <div class="fg"><label>EMAIL ที่จะส่งทดสอบ</label>
+        <input class="fi" id="tEmail" value="${session?.user?.email||''}" placeholder="yourname@example.com" />
+      </div>
+      <button class="btn btn-g" style="width:100%" onclick="testEmail()">📧 ส่ง Test Email</button>
+      <div id="emailResult" style="margin-top:12px"></div>
+
       <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
       <div class="sec-title" style="margin-bottom:8px">Apps Script Code</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">คัดลอก code นี้ไปวางใน Google Apps Script แทน code เดิมทั้งหมด</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">คัดลอก code นี้ไปวางใน Google Apps Script แทน code เดิมทั้งหมด แล้วกด <strong>Deploy &gt; Manage deployments &gt; Edit (✏️) &gt; Version: New version &gt; Deploy</strong></div>
       <button class="btn btn-p" style="width:100%" onclick="copyCode()">📋 คัดลอก Apps Script Code</button>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
+      <div class="sec-title" style="margin-bottom:8px">ℹ️ วิธีแก้หาก Email ไม่ส่ง</div>
+      <ol style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.7">
+        <li>ใน Apps Script editor กด <strong>Run</strong> ที่ฟังก์ชัน <code>sendTestEmail</code> แล้วกด <strong>Authorize</strong> (ครั้งแรก)</li>
+        <li>กด <strong>Deploy &gt; Manage deployments &gt; Edit &gt; New version &gt; Deploy</strong> ทุกครั้งที่แก้ code</li>
+        <li>ตรวจว่า URL ด้านบนคือ URL ของ version ล่าสุด</li>
+        <li>ใน Google Sheet แท็บ <strong>Users</strong> ตรวจว่า column <code>email</code> ของ Admin และ PE กรอกครบ</li>
+        <li>เปิด DevTools Console (F12) เพื่อดู log ของ apiCall</li>
+      </ol>
     </div>`;
   // gsCode display removed
+}
+
+async function testEmail() {
+  const to = document.getElementById('tEmail').value.trim();
+  const resultEl = document.getElementById('emailResult');
+  if (!to) { resultEl.innerHTML='<div class="alert alert-r">❌ กรุณากรอก email ก่อน</div>'; return; }
+  if (!CFG.scriptUrl) { resultEl.innerHTML='<div class="alert alert-r">❌ ยังไม่ได้ตั้งค่า Apps Script URL</div>'; return; }
+  resultEl.innerHTML='<div class="alert" style="background:var(--surface2);border:1px solid var(--border2)">⏳ กำลังส่ง test email ไปที่ '+to+'...</div>';
+  const res = await apiCall('sendTestEmail', { to });
+  if (res && res.ok) {
+    resultEl.innerHTML=`<div class="alert alert-g">✅ ส่ง test email ไปที่ <strong>${to}</strong> เรียบร้อย (โควต้าเหลือ ${res.quotaLeft ?? '—'} ฉบับ) — กรุณาตรวจสอบ inbox/spam</div>`;
+    toast('ส่ง test email เรียบร้อย');
+  } else {
+    const msg = res?.error || res?.message || 'ไม่ทราบสาเหตุ';
+    resultEl.innerHTML=`<div class="alert alert-r">❌ ส่งไม่สำเร็จ: ${msg}<br><span style="font-size:11px;color:var(--text3)">ตรวจใน Apps Script Executions log หรือ DevTools Console (F12)</span></div>`;
+  }
 }
 
 function saveScriptUrl() {
@@ -1069,16 +1118,36 @@ async function updSt(id, status, tsField) {
 
   // ── ส่ง email แจ้ง Admin + PE เมื่อหัวหน้าทีมกด "ส่งรายงานแล้ว" ──
   if (status==='reported') {
+    // โหลด users ล่าสุดจาก Sheet เผื่อเพิ่งเพิ่ม email
+    try { const ur = await apiCall('getUsers'); if (ur.ok && ur.users) users = ur.users; } catch(_){}
+
     const recipients = users
-      .filter(u=>['admin','pe'].includes(u.role) && u.email)
+      .filter(u=>['admin','pe'].includes(u.role) && u.email && /.+@.+\..+/.test(u.email))
       .map(u=>u.email);
-    if (recipients.length && CFG.scriptUrl) {
-      await apiCall('sendReportEmail', { job, recipients });
-      toast(`ส่ง email แจ้ง ${recipients.length} คน เรียบร้อย`, 's');
-    } else if (!CFG.scriptUrl) {
+
+    console.log('[updSt] status=reported, recipients=', recipients);
+
+    if (!CFG.scriptUrl) {
       toast('ยังไม่ได้ตั้งค่า Apps Script — ไม่ได้ส่ง email', 'i');
     } else if (!recipients.length) {
       toast('ไม่พบ email ของ Admin/PE — กรุณาเพิ่ม email ใน Admin Panel', 'i');
+    } else {
+      // ส่งเฉพาะ field ที่จำเป็นเพื่อกัน URL ยาวเกิน
+      const slim = {
+        jobNo: job.jobNo||'', client: job.client||'', projectName: job.projectName||'',
+        workPlace: job.workPlace||'', workingDate: job.workingDate||'',
+        methods: Array.isArray(job.methods)?job.methods:[],
+        leadName: job.leadName||'', members: Array.isArray(job.members)?job.members:[],
+        reportedAt: job.reportedAt||Date.now(), updatedBy: job.updatedBy||''
+      };
+      const res = await apiCall('sendReportEmail', { job: slim, recipients });
+      if (res && res.ok) {
+        toast(`ส่ง email แจ้ง ${recipients.length} คนเรียบร้อย (${recipients.join(', ')})`, 's');
+      } else {
+        const msg = res?.error || res?.message || 'ไม่ทราบสาเหตุ';
+        console.error('[sendReportEmail failed]', res);
+        toast(`ส่ง email ไม่สำเร็จ: ${msg} — ดูรายละเอียดใน Console (F12)`, 'e');
+      }
     }
   }
 
@@ -1114,27 +1183,50 @@ function getSheet(name) {
 }
 
 function doGet(e) {
-  const action = e.parameter.action;
-  if (action === 'ping') return resp({ ok: true, message: 'Falcon online!' });
-  if (action === 'login') return handleLogin(e.parameter);
-  if (action === 'getJobs') return resp({ ok: true, jobs: readSheet('Jobs') });
-  if (action === 'getUsers') return resp({ ok: true, users: readUsers() });
-  return resp({ ok: false, message: 'Unknown action' });
+  try {
+    const action = e.parameter.action;
+    Logger.log('[doGet] action=' + action);
+    if (action === 'ping') return resp({ ok: true, message: 'Falcon online!', version: 'v2.22' });
+    if (action === 'login') return handleLogin(e.parameter);
+    if (action === 'getJobs') return resp({ ok: true, jobs: readSheet('Jobs') });
+    if (action === 'getUsers') return resp({ ok: true, users: readUsers() });
+    if (action === 'sendReportEmail') {
+      const job = parseParam(e.parameter.job, {});
+      const recipients = parseParam(e.parameter.recipients, []);
+      return sendReportEmail(job, recipients);
+    }
+    if (action === 'sendTestEmail') {
+      const to = e.parameter.to;
+      return sendTestEmail(to);
+    }
+    return resp({ ok: false, message: 'Unknown action: ' + action });
+  } catch(err) {
+    Logger.log('[doGet ERROR] ' + err.toString() + ' | stack: ' + err.stack);
+    return resp({ ok: false, error: err.toString() });
+  }
 }
 
 function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
     const action = d.action;
+    Logger.log('[doPost] action=' + action);
     if (action === 'saveJob') return saveRow('Jobs', d.job);
     if (action === 'deleteJob') return deleteRow('Jobs', d.id);
     if (action === 'saveUser') return saveRow('Users', d.user);
     if (action === 'deleteUser') return deleteRow('Users', d.id);
     if (action === 'sendReportEmail') return sendReportEmail(d.job, d.recipients);
-    return resp({ ok: false, message: 'Unknown action' });
+    if (action === 'sendTestEmail') return sendTestEmail(d.to);
+    return resp({ ok: false, message: 'Unknown action: ' + action });
   } catch(err) {
+    Logger.log('[doPost ERROR] ' + err.toString() + ' | stack: ' + err.stack);
     return resp({ ok: false, error: err.toString() });
   }
+}
+
+function parseParam(v, fallback) {
+  if (v === undefined || v === null || v === '') return fallback;
+  try { return JSON.parse(v); } catch(_) { return v; }
 }
 
 function handleLogin(params) {
@@ -1230,10 +1322,26 @@ function deleteRow(sheetName, id) {
 
 function sendReportEmail(job, recipients) {
   try {
-    if (!recipients || recipients.length === 0) return resp({ ok: false, message: 'No recipients' });
+    Logger.log('[sendReportEmail] job=' + JSON.stringify(job));
+    Logger.log('[sendReportEmail] recipients=' + JSON.stringify(recipients));
+    if (!recipients || recipients.length === 0) {
+      Logger.log('[sendReportEmail] No recipients — aborting');
+      return resp({ ok: false, message: 'No recipients provided' });
+    }
+    // กรอง email ที่ valid เท่านั้น
+    recipients = recipients.filter(function(r){ return r && /.+@.+\\..+/.test(r); });
+    if (recipients.length === 0) return resp({ ok: false, message: 'No valid email in recipients' });
+
+    // เช็คโควต้า (MailApp = 100 ฉบับ/วัน สำหรับ gmail.com ทั่วไป, 1500 ฉบับ/วัน สำหรับ Workspace)
+    const quotaLeft = MailApp.getRemainingDailyQuota();
+    Logger.log('[sendReportEmail] MailApp quota remaining: ' + quotaLeft);
+    if (quotaLeft < recipients.length) {
+      return resp({ ok: false, message: 'MailApp quota exhausted (เหลือ ' + quotaLeft + ' ฉบับ)' });
+    }
+
     const methods = Array.isArray(job.methods) ? job.methods.join(', ') : (job.methods || '—');
     const members = Array.isArray(job.members) ? job.members.join(', ') : (job.members || '—');
-    const reportedAt = job.reportedAt ? new Date(job.reportedAt).toLocaleString('th-TH') : '—';
+    const reportedAt = job.reportedAt ? new Date(Number(job.reportedAt)||job.reportedAt).toLocaleString('th-TH') : '—';
     const subject = \`[Falcon] ส่งรายงานแล้ว — \${job.jobNo} / \${job.client || ''}\`;
     const body = \`รายงานถูกส่งให้ลูกค้าเรียบร้อยแล้ว
 
@@ -1283,10 +1391,38 @@ Work Method    : \${methods}
       to: recipients.join(','),
       subject: subject,
       body: body,
-      htmlBody: htmlBody
+      htmlBody: htmlBody,
+      name: 'Falcon Work Assignment'
     });
-    return resp({ ok: true, sent: recipients.length });
+    Logger.log('[sendReportEmail] Sent successfully to ' + recipients.length + ' recipients');
+    return resp({ ok: true, sent: recipients.length, to: recipients });
   } catch(err) {
+    Logger.log('[sendReportEmail ERROR] ' + err.toString() + ' | stack: ' + err.stack);
+    return resp({ ok: false, error: err.toString(), stack: (err.stack||'').slice(0,500) });
+  }
+}
+
+// ── Test email (ใช้ทดสอบจากหน้า Settings) ──
+function sendTestEmail(to) {
+  try {
+    Logger.log('[sendTestEmail] to=' + to);
+    if (!to || !/.+@.+\\..+/.test(to)) return resp({ ok: false, message: 'Invalid email: ' + to });
+    const quotaLeft = MailApp.getRemainingDailyQuota();
+    MailApp.sendEmail({
+      to: to,
+      subject: '[Falcon] Test Email — ' + new Date().toLocaleString('th-TH'),
+      htmlBody: '<div style="font-family:sans-serif;padding:20px;max-width:480px">' +
+        '<h2 style="color:#7c6fff">🦅 Falcon Test Email</h2>' +
+        '<p>ถ้าคุณได้รับอีเมลนี้ แสดงว่า Apps Script ของ Falcon Work Assignment สามารถส่งอีเมลได้ตามปกติ ✅</p>' +
+        '<p style="color:#666;font-size:13px">เวลาทดสอบ: ' + new Date().toLocaleString('th-TH') + '</p>' +
+        '<p style="color:#666;font-size:13px">โควต้าคงเหลือวันนี้: ' + quotaLeft + ' ฉบับ</p>' +
+        '</div>',
+      name: 'Falcon Work Assignment'
+    });
+    Logger.log('[sendTestEmail] OK');
+    return resp({ ok: true, sent: 1, to: to, quotaLeft: quotaLeft - 1 });
+  } catch(err) {
+    Logger.log('[sendTestEmail ERROR] ' + err.toString());
     return resp({ ok: false, error: err.toString() });
   }
 }
