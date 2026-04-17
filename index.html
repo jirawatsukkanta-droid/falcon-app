@@ -663,15 +663,18 @@ function pgOpenJob(el) {
         <input class="fi" id="openJobNo" value="${nextNo}" placeholder="เช่น FLN-2505" style="font-family:var(--font-d);font-size:20px;font-weight:700;color:#a09aff;letter-spacing:.5px" />
         <span style="font-size:11px;color:var(--text3);margin-top:3px">ระบบออกให้อัตโนมัติ — แก้ไขได้ถ้าต้องการ</span>
       </div>
+      <div class="fg"><label>CLIENT *</label><input class="fi" id="openClient" placeholder="ชื่อลูกค้า" /></div>
       <div class="fg"><label>หมายเหตุ (ถ้ามี)</label><input class="fi" id="openNote" placeholder="เช่น งานด่วน, Shutdown..." /></div>
       <button class="btn btn-p" onclick="doOpenJob()">เปิด Job</button>
     </div>`;
 }
 async function doOpenJob() {
   const jobNo = document.getElementById('openJobNo').value.trim();
+  const client = document.getElementById('openClient').value.trim();
   if (!jobNo) { toast('กรุณาระบุ Job No.','i'); return; }
+  if (!client) { toast('กรุณาระบุชื่อลูกค้า','i'); return; }
   if (jobs.find(j=>j.jobNo===jobNo)) { toast(`Job No. "${jobNo}" มีอยู่แล้วในระบบ`,'e'); return; }
-  const job={id:Date.now().toString(),jobNo,note:document.getElementById('openNote').value,
+  const job={id:Date.now().toString(),jobNo,client,note:document.getElementById('openNote').value,
     status:'open',createdAt:Date.now(),methods:[],members:[],createdBy:session?.user?.username};
   jobs.push(job);
   await saveJob(job,'saveJob');
