@@ -163,10 +163,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* ── MODAL ── */
-.mo-wrap{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0;
+.mo-wrap{position:fixed;inset:0;z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0;
   background:rgba(0,0,0,0);pointer-events:none;transition:background .2s}
 @media(min-width:600px){.mo-wrap{align-items:center;padding:20px}}
-.mo-wrap.open{background:rgba(0,0,0,.65);backdrop-filter:blur(5px);pointer-events:all}
+.mo-wrap.open{display:flex;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);pointer-events:all}
 .mo{background:var(--surface);border:1px solid var(--border2);width:100%;max-width:580px;
   max-height:92dvh;overflow-y:auto;padding:24px 22px;
   border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1)}
@@ -334,6 +334,15 @@ select.fi option{background:var(--surface2)}
   </div>
 
   
+  <!-- MOBILE NAV -->
+  <nav id="mobileNav" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(17,17,24,0.97);border-top:1px solid rgba(255,255,255,0.06);padding:6px 0 8px">
+    <div style="display:flex">
+      <div class="mni" id="mni-dashboard" onclick="showPage('dashboard')"><div class="mni-ic">📊</div><div class="mni-lbl">หน้าหลัก</div></div>
+      <div class="mni" id="mni-jobs" onclick="showPage('jobs')"><div class="mni-ic">📋</div><div class="mni-lbl">Jobs</div></div>
+      <div class="mni" id="mni-action" onclick="mobAction()"><div class="mni-ic">➕</div><div class="mni-lbl" id="mni-action-lbl">เปิด Job</div></div>
+      <div class="mni" id="mni-extra" onclick="mobExtra()"><div class="mni-ic">⚙️</div><div class="mni-lbl" id="mni-extra-lbl">ตั้งค่า</div></div>
+    </div>
+  </nav>
 </div>
 
 <!-- DETAIL MODAL -->
@@ -348,7 +357,7 @@ select.fi option{background:var(--surface2)}
 //  CONFIG — paste your Apps Script URL here
 // ══════════════════════════════════════════
 const CFG = {
-  scriptUrl: localStorage.getItem('falconScriptUrl') || '',
+  scriptUrl: localStorage.getItem('falconScriptUrl') || 'https://script.google.com/macros/s/AKfycbxcYC1pH-xmfxWhYzZWGDO2-vDKjtKaFexfVYuaKnRDwsJ94fqJh7GALm3C_XLXQKeSXQ/exec',
   sheetName: 'Jobs',
   usersSheet: 'Users',
   logsSheet: 'Logs',
@@ -518,6 +527,12 @@ function startApp() {
 
   if (!CFG.scriptUrl) document.getElementById('cfg-banner').style.display='flex';
   else document.getElementById('cfg-banner').style.display='none';
+
+  // show mobile nav on small screens
+  if (window.innerWidth <= 900) {
+    document.getElementById('mobileNav').style.display = 'block';
+    document.getElementById('mainContent').style.paddingBottom = '75px';
+  }
 
   loadJobs().then(()=>showPage('dashboard'));
 }
