@@ -64,6 +64,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .role-admin{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
 .role-pe{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .role-lead{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.role-tech{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .btn-logout{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:var(--r-xs);
   padding:5px 11px;font-size:12px;font-family:var(--font);cursor:pointer;transition:all .12s}
 .btn-logout:hover{border-color:var(--red-border);color:var(--red)}
@@ -357,7 +358,7 @@ const CFG = {
 };
 
 const METHODS = ['UT','MT','PT','VT','ET','PMI','PAUT','UTM','Holiday Test','Tube Inspection','Tank Inspection','Vessel Inspection'];
-const ROLES = { admin:'Admin', pe:'Project Engineer', lead:'Team Leader' };
+const ROLES = { admin:'Admin', pe:'Project Engineer', lead:'Team Leader', tech:'Technician' };
 
 // ── Demo users (used when no script URL) ──
 const DEMO_USERS = [
@@ -730,13 +731,13 @@ function pgAssign(el, editJobId=null) {
         <div class="fg"><label>หัวหน้าทีม *</label>
           <select class="fi" id="aLead">
             <option value="">— เลือกหัวหน้าทีม —</option>
-            ${users.map(u=>`<option value="${u.fullName||u.username}">${u.fullName||u.username} (${ROLES[u.role]||u.role})</option>`).join('')}
+            ${users.filter(u=>u.role==='lead').map(u=>`<option value="${u.fullName||u.username}" ${editJob&&editJob.leadName===(u.fullName||u.username)?'selected':''}>${u.fullName||u.username}</option>`).join('')}
           </select>
         </div>
-        <div class="fg"><label>ลูกทีม</label>
+        <div class="fg"><label>ลูกทีม (Technician)</label>
           <select class="fi" id="aMemberSel" onchange="addMember(this.value)">
             <option value="">+ เพิ่มสมาชิก</option>
-            ${users.map(u=>`<option value="${u.fullName||u.username}">${u.fullName||u.username}</option>`).join('')}
+            ${users.filter(u=>u.role==='tech').map(u=>`<option value="${u.fullName||u.username}">${u.fullName||u.username}</option>`).join('')}
           </select>
         </div>
         <div class="full"><div class="mtags-area" id="mtagArea"></div></div>
@@ -868,6 +869,7 @@ function openUserMo() {
         <option value="admin">Admin</option>
         <option value="pe">Project Engineer</option>
         <option value="lead">Team Leader</option>
+        <option value="tech">Technician</option>
       </select>
     </div>
     <div class="ffoot"><button class="btn btn-o" onclick="closeMo('userMo')">ยกเลิก</button><button class="btn btn-p" onclick="doAddUser()">เพิ่ม User</button></div>`;
