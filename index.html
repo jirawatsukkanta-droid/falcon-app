@@ -163,10 +163,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* ── MODAL ── */
-.mo-wrap{position:fixed;inset:0;z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0;
+.mo-wrap{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0;
   background:rgba(0,0,0,0);pointer-events:none;transition:background .2s}
 @media(min-width:600px){.mo-wrap{align-items:center;padding:20px}}
-.mo-wrap.open{display:flex;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);pointer-events:all}
+.mo-wrap.open{background:rgba(0,0,0,.65);backdrop-filter:blur(5px);pointer-events:all}
 .mo{background:var(--surface);border:1px solid var(--border2);width:100%;max-width:580px;
   max-height:92dvh;overflow-y:auto;padding:24px 22px;
   border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1)}
