@@ -1082,7 +1082,7 @@ function openDetail(id) {
   const tl=steps.map((s,i)=>`
     <div class="tl-item">
       <div class="tl-dc">
-        <div class="tl-dot ${s.done?'done':(!steps[i-1]||steps[i-1].done)?'active':''}"></div>
+        <div class="tl-dot ${s.done?'done':steps.findIndex(x=>!x.done)===i?'active':''}"></div>
         ${i<steps.length-1?'<div class="tl-line"></div>':''}
       </div>
       <div class="tl-c">
@@ -1106,7 +1106,7 @@ function openDetail(id) {
       <div class="dr"><div class="dk">Client</div><div class="dv">${j.client||'ยังไม่ระบุ'}</div></div>
       <div class="dr"><div class="dk">Project Name</div><div class="dv">${j.projectName||'—'}</div></div>
       <div class="dr"><div class="dk">Work Place</div><div class="dv">${j.workPlace||'ยังไม่ระบุ'}</div></div>
-      <div class="dr"><div class="dk">Working Date</div><div class="dv">${j.workingDate||'ยังไม่ระบุ'}</div></div>
+      <div class="dr"><div class="dk">Working Date</div><div class="dv">${j.workingDate?(()=>{return j.workingDate.split(', ').map(d=>{const clean=d.trim().replace(/T\d{2}:\d{2}:\d{2}.*$/,'');try{return new Date(clean+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});}catch(e){return clean;}}).join(', ');})():'ยังไม่ระบุ'}</div></div>
       <div class="dr"><div class="dk">Work Method</div><div class="dv">${(j.methods||[]).map(m=>`<span class="mchip">${m}</span>`).join('')||'—'}</div></div>
     </div>
     <div style="margin-bottom:18px">
