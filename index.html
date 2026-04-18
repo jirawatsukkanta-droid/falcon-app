@@ -1469,16 +1469,8 @@ function setupInitialUsers() {
 // ══════════════════════════════════════════
 async function init() {
   await initDemoHashes();
-  // seed demo data
-  if (!localStorage.getItem('falconJobs')) {
-    const demo=[
-      {id:'d1',jobNo:'FLN-2501',client:'SCG Chemicals',projectName:'ตรวจสอบถัง Tank Farm A',workPlace:'มาบตาพุด ระยอง',workingDate:'2025-04-20',methods:['UT','RT'],leadName:'หัวหน้า วิชัย',members:['สมชาย ใจดี','อนงค์ ขยันขัน'],status:'inprogress',createdAt:Date.now()-86400000*3,assignedAt:Date.now()-86400000*2,createdBy:'admin'},
-      {id:'d2',jobNo:'FLN-2502',client:'PTT Exploration',projectName:'Pipeline Inspection Q2',workPlace:'ชลบุรี',workingDate:'2025-04-18',methods:['MT','PT','VT'],leadName:'หัวหน้า วิชัย',members:['สมหญิง รักงาน'],status:'site_done',createdAt:Date.now()-86400000*5,assignedAt:Date.now()-86400000*4,siteDoneAt:Date.now()-86400000,createdBy:'admin'},
-      {id:'d3',jobNo:'FLN-2503',client:'IRPC',projectName:'',workPlace:'ระยอง',workingDate:'2025-04-25',methods:['Drone','PMI'],leadName:'',members:[],status:'open',createdAt:Date.now()-3600000,createdBy:'admin'},
-      {id:'d4',jobNo:'FLN-2504',client:'Dow Chemical',projectName:'Annual Inspection 2025',workPlace:'Map Ta Phut',workingDate:'2025-04-10',methods:['UT','ET'],leadName:'หัวหน้า วิชัย',members:['วิศวกร สมชาย'],status:'reported',createdAt:Date.now()-86400000*10,assignedAt:Date.now()-86400000*9,siteDoneAt:Date.now()-86400000*6,reportedAt:Date.now()-86400000*2,createdBy:'admin'},
-    ];
-    localStorage.setItem('falconJobs', JSON.stringify(demo));
-  }
+  // clear any leftover demo/local jobs — real data comes from Google Sheet
+  localStorage.removeItem('falconJobs');
   if (restoreSession()) startApp();
 }
 
