@@ -967,28 +967,46 @@ function pgSettings(el) {
       <div id="connResult" style="margin-top:12px"></div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
-      <div class="sec-title" style="margin-bottom:8px">ทดสอบส่ง Email</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">ใช้ตรวจว่า Apps Script ส่งอีเมลได้จริงหรือไม่ (หากส่งไม่ได้ ต้อง Authorize MailApp ใน Apps Script ก่อน)</div>
-      <div class="fg"><label>EMAIL ที่จะส่งทดสอบ</label>
-        <input class="fi" id="tEmail" value="${session?.user?.email||''}" placeholder="yourname@example.com" />
+      <div class="sec-title" style="margin-bottom:4px">📧 ตั้งค่าการส่ง Email</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">ทำตาม 3 ขั้นตอนนี้ครั้งเดียว หลังจากนั้นระบบจะส่ง Email อัตโนมัติทุกครั้งที่หัวหน้าทีมกด "ส่งรายงานแล้ว"</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+          <div style="background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">1</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:3px">คัดลอก Code ไปวางใน Apps Script</div>
+            <div style="font-size:12px;color:var(--text2)">กดปุ่มด้านล่าง แล้วไป Apps Script editor → ลบ code เดิมทั้งหมด → Ctrl+V → บันทึก</div>
+            <button class="btn btn-p btn-sm" style="margin-top:8px" onclick="copyCode()">📋 คัดลอก Apps Script Code</button>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+          <div style="background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">2</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:3px">Authorize MailApp (ทำครั้งเดียว)</div>
+            <div style="font-size:12px;color:var(--text2)">ใน Apps Script editor: เลือกฟังก์ชัน <code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-size:11px">authorizeNow</code> จาก dropdown → กด <strong>▶ Run</strong> → กด <strong>Review Permissions → Allow</strong><br>
+            <span style="color:var(--amber);font-size:11px">⚠️ ขั้นตอนนี้สำคัญมาก — ถ้าข้ามไป MailApp จะ error ทุกครั้ง</span></div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+          <div style="background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">3</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:3px">Deploy version ใหม่ + ทดสอบส่ง Email</div>
+            <div style="font-size:12px;color:var(--text2)">Apps Script: <strong>Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy</strong><br>แล้วทดสอบด้วยปุ่มด้านล่าง</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+              <input class="fi" id="tEmail" value="${session?.user?.email||''}" placeholder="yourname@example.com" style="flex:1;min-width:180px" />
+              <button class="btn btn-g btn-sm" onclick="testEmail()">📧 ส่ง Test Email</button>
+            </div>
+            <div id="emailResult" style="margin-top:8px"></div>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-g" style="width:100%" onclick="testEmail()">📧 ส่ง Test Email</button>
-      <div id="emailResult" style="margin-top:12px"></div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
       <div class="sec-title" style="margin-bottom:8px">Apps Script Code</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">คัดลอก code นี้ไปวางใน Google Apps Script แทน code เดิมทั้งหมด แล้วกด <strong>Deploy &gt; Manage deployments &gt; Edit (✏️) &gt; Version: New version &gt; Deploy</strong></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">คัดลอก code ด้านล่างไปวางใน Google Apps Script (แทน code เดิมทั้งหมด)</div>
       <button class="btn btn-p" style="width:100%" onclick="copyCode()">📋 คัดลอก Apps Script Code</button>
-
-      <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
-      <div class="sec-title" style="margin-bottom:8px">ℹ️ วิธีแก้หาก Email ไม่ส่ง</div>
-      <ol style="font-size:13px;color:var(--text2);padding-left:18px;line-height:1.7">
-        <li>ใน Apps Script editor กด <strong>Run</strong> ที่ฟังก์ชัน <code>sendTestEmail</code> แล้วกด <strong>Authorize</strong> (ครั้งแรก)</li>
-        <li>กด <strong>Deploy &gt; Manage deployments &gt; Edit &gt; New version &gt; Deploy</strong> ทุกครั้งที่แก้ code</li>
-        <li>ตรวจว่า URL ด้านบนคือ URL ของ version ล่าสุด</li>
-        <li>ใน Google Sheet แท็บ <strong>Users</strong> ตรวจว่า column <code>email</code> ของ Admin และ PE กรอกครบ</li>
-        <li>เปิด DevTools Console (F12) เพื่อดู log ของ apiCall</li>
-      </ol>
     </div>`;
   // gsCode display removed
 }
@@ -1332,13 +1350,6 @@ function sendReportEmail(job, recipients) {
     recipients = recipients.filter(function(r){ return r && /.+@.+\\..+/.test(r); });
     if (recipients.length === 0) return resp({ ok: false, message: 'No valid email in recipients' });
 
-    // เช็คโควต้า (MailApp = 100 ฉบับ/วัน สำหรับ gmail.com ทั่วไป, 1500 ฉบับ/วัน สำหรับ Workspace)
-    const quotaLeft = MailApp.getRemainingDailyQuota();
-    Logger.log('[sendReportEmail] MailApp quota remaining: ' + quotaLeft);
-    if (quotaLeft < recipients.length) {
-      return resp({ ok: false, message: 'MailApp quota exhausted (เหลือ ' + quotaLeft + ' ฉบับ)' });
-    }
-
     const methods = Array.isArray(job.methods) ? job.methods.join(', ') : (job.methods || '—');
     const members = Array.isArray(job.members) ? job.members.join(', ') : (job.members || '—');
     const reportedAt = job.reportedAt ? new Date(Number(job.reportedAt)||job.reportedAt).toLocaleString('th-TH') : '—';
@@ -1395,7 +1406,7 @@ Work Method    : \${methods}
       name: 'Falcon Work Assignment'
     });
     Logger.log('[sendReportEmail] Sent successfully to ' + recipients.length + ' recipients');
-    return resp({ ok: true, sent: recipients.length, to: recipients });
+    return resp({ ok: true, sent: recipients.length, to: recipients, quotaLeft: MailApp.getRemainingDailyQuota() });
   } catch(err) {
     Logger.log('[sendReportEmail ERROR] ' + err.toString() + ' | stack: ' + err.stack);
     return resp({ ok: false, error: err.toString(), stack: (err.stack||'').slice(0,500) });
@@ -1430,6 +1441,14 @@ function sendTestEmail(to) {
 function resp(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── STEP 1: Run this function ONCE to authorize MailApp ──
+// เปิด Apps Script editor → เลือก authorizeNow → กด Run → กด Allow
+function authorizeNow() {
+  MailApp.getRemainingDailyQuota(); // triggers OAuth consent for send_mail scope
+  Logger.log('[authorizeNow] MailApp authorized. Quota: ' + MailApp.getRemainingDailyQuota());
+  return 'Authorized! MailApp quota: ' + MailApp.getRemainingDailyQuota();
 }
 
 // ── INIT: สร้าง Users sheet เริ่มต้น ──
