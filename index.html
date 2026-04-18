@@ -601,11 +601,12 @@ function showPage(page) {
 
 // ── DASHBOARD ──
 function pgDashboard(el) {
-  const t=jobs.length, open=jobs.filter(j=>j.status==='open').length,
-        inprog=jobs.filter(j=>j.status==='inprogress').length,
-        sitedone=jobs.filter(j=>j.status==='site_done').length,
-        done=jobs.filter(j=>['reported','invoiced'].includes(j.status)).length;
-  const recent=[...jobs].sort((a,b)=>b.createdAt-a.createdAt).slice(0,6);
+  const active=jobs.filter(j=>j.status!=='invoiced');
+  const t=active.length, open=active.filter(j=>j.status==='open').length,
+        inprog=active.filter(j=>j.status==='inprogress').length,
+        sitedone=active.filter(j=>j.status==='site_done').length,
+        done=active.filter(j=>j.status==='reported').length;
+  const recent=[...active].sort((a,b)=>b.createdAt-a.createdAt).slice(0,6);
   el.innerHTML=`
     <div class="pg-head"><div class="pg-title">Dashboard</div><div class="pg-sub">ภาพรวมงานทั้งหมดของ Falcon</div></div>
     <div class="stats" style="grid-template-columns:repeat(5,1fr)">
@@ -621,11 +622,11 @@ function pgDashboard(el) {
 
 // ── JOB LIST ──
 function pgJobs(el) {
-  let list = jobs;
-  if (filterSt!=='all') list=jobs.filter(j=>j.status===filterSt);
+  const activeJobs=jobs.filter(j=>j.status!=='invoiced');
+  let list = filterSt==='all'?activeJobs:jobs.filter(j=>j.status===filterSt);
   const cnt=s=>jobs.filter(j=>j.status===s).length;
   el.innerHTML=`
-    <div class="pg-head"><div class="pg-title">All Jobs</div><div class="pg-sub">รายการงานทั้งหมด ${jobs.length} Job</div></div>
+    <div class="pg-head"><div class="pg-title">All Jobs</div><div class="pg-sub">รายการงาน ${activeJobs.length} Job (ปิดแล้ว ${jobs.filter(j=>j.status==='invoiced').length} Job)</div></div>
     <div class="search-wrap"><input placeholder="ค้นหา Client, Project, Job No..." oninput="searchJ(this.value)"></div>
     <div class="chips">
       <div class="chip ${filterSt==='all'?'on':''}" onclick="setFilt('all')">ทั้งหมด (${jobs.length})</div>
@@ -1064,20 +1065,23 @@ function copyCode() {
 function openDetail(id) {
   let j=jobs.find(x=>String(x.id)===String(id)); if(!j){ loadJobs().then(()=>{ j=jobs.find(x=>String(x.id)===String(id)); if(j) openDetail(id); }); return; }
   const role=session?.user?.role;
+  // status order for done-checking
+  const ST_ORDER=['open','inprogress','site_done','reported','invoiced'];
+  const stIdx=ST_ORDER.indexOf(j.status);
   const steps=[
     {label:'เปิด Job (Admin)',done:true,ts:j.createdAt},
-    {label:'จ่ายงาน / In Progress',done:!!j.assignedAt,ts:j.assignedAt},
-    {label:'จบหน้างาน',done:!!j.siteDoneAt,ts:j.siteDoneAt,
+    {label:'จ่ายงาน / In Progress',done:stIdx>=1,ts:j.assignedAt},
+    {label:'จบหน้างาน',done:stIdx>=2,ts:j.siteDoneAt,
       show:role==='lead'&&j.status==='inprogress',
       locked: role==='lead'&&j.status==='inprogress'&&j.workingDate&&(new Date().setHours(0,0,0,0)<new Date(j.workingDate).setHours(0,0,0,0)),
       lockMsg: j.workingDate?`ล็อคจนถึงวันที่ ${new Date(j.workingDate).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}`:'',
       act:`updSt('${id}','site_done','siteDoneAt')`,lbl:'ยืนยันจบหน้างาน'},
-    {label:'ส่งรายงานลูกค้า',done:!!j.reportedAt,ts:j.reportedAt,
+    {label:'ส่งรายงานลูกค้า',done:stIdx>=3,ts:j.reportedAt,
       show:role==='lead'&&j.status==='site_done',
       act:`updSt('${id}','reported','reportedAt')`,lbl:'ยืนยันส่งรายงานแล้ว'},
-    {label:'ออกใบแจ้งหนี้',done:!!j.invoicedAt,ts:j.invoicedAt,
+    {label:'ออกใบแจ้งหนี้',done:stIdx>=4,ts:j.invoicedAt,
       show:role==='admin'&&j.status==='reported',
-      act:`updSt('${id}','invoiced','invoicedAt')`,lbl:'ยืนยันออกใบแจ้งหนี้'},
+      act:`openInvoiceMo('${id}')`,lbl:'ยืนยันออกใบแจ้งหนี้'},
   ];
   const tl=steps.map((s,i)=>`
     <div class="tl-item">
@@ -1114,6 +1118,7 @@ function openDetail(id) {
       <div class="dr"><div class="dk">หัวหน้าทีม</div><div class="dv"><div class="av av-lead" style="width:22px;height:22px;font-size:9px">${(j.leadName||'?')[0]}</div>${j.leadName||'ยังไม่ระบุ'}</div></div>
       <div class="dr"><div class="dk">ลูกทีม</div><div class="dv">${(j.members||[]).join(', ')||'—'}</div></div>
     </div>
+    ${j.invoiceNo?`<div style="margin-bottom:18px;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm)"><div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">✅ ใบแจ้งหนี้</div><div style="font-size:15px;font-weight:700;color:var(--green);font-family:var(--font-d)">${j.invoiceNo}</div></div>`:''}
     <div>
       <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:12px">PROGRESS TIMELINE</div>
       <div class="tl">${tl}</div>
@@ -1123,6 +1128,37 @@ function openDetail(id) {
       ${canDel?`<button class="btn btn-r btn-sm" onclick="delJob('${id}')">ลบ Job นี้</button>`:''}
     </div>`;
   document.getElementById('detailMo').classList.add('open');
+}
+
+function openInvoiceMo(jobId) {
+  // Use userMo as a lightweight second modal
+  document.getElementById('userMoBody').innerHTML=`
+    <div class="mo-head"><div class="mo-title">ออกใบแจ้งหนี้</div><div class="mo-x" onclick="closeMo('userMo')">×</div></div>
+    <div class="fg" style="margin-bottom:20px">
+      <label>หมายเลขใบแจ้งหนี้ *</label>
+      <input class="fi" id="invoiceNo" placeholder="เช่น INV-2604001" autofocus />
+      <span style="font-size:11px;color:var(--text3);margin-top:3px">กรอกหมายเลขใบแจ้งหนี้จากระบบบัญชี</span>
+    </div>
+    <div class="ffoot">
+      <button class="btn btn-o" onclick="closeMo('userMo')">ยกเลิก</button>
+      <button class="btn btn-p" onclick="confirmInvoice('${jobId}')">✅ ยืนยันออกใบแจ้งหนี้</button>
+    </div>`;
+  document.getElementById('userMo').classList.add('open');
+  setTimeout(()=>document.getElementById('invoiceNo')?.focus(),100);
+}
+
+async function confirmInvoice(jobId) {
+  const invNo = document.getElementById('invoiceNo')?.value.trim();
+  if (!invNo) { toast('กรุณากรอกหมายเลขใบแจ้งหนี้','i'); return; }
+  closeMo('userMo');
+  const job=jobs.find(j=>String(j.id)===String(jobId));
+  if (!job) return;
+  job.status='invoiced'; job.invoicedAt=Date.now();
+  job.invoiceNo=invNo; job.updatedBy=session?.user?.username;
+  await saveJob(job,'saveJob');
+  closeMo('detailMo');
+  toast(`ออกใบแจ้งหนี้ ${invNo} เรียบร้อย — Job ปิดแล้ว`,'s');
+  showPage(curPage);
 }
 
 function closeMo(id) { document.getElementById(id).classList.remove('open'); }
